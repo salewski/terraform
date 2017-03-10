@@ -24,29 +24,35 @@ func resourceAwsApiGatewayDomainName() *schema.Resource {
 			"certificate_body": {
 				Type:     schema.TypeString,
 				ForceNew: true,
-				Required: true,
+				Optional: true,
 			},
 
 			"certificate_chain": {
 				Type:     schema.TypeString,
 				ForceNew: true,
-				Required: true,
+				Optional: true,
 			},
 
 			"certificate_name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 
 			"certificate_private_key": {
 				Type:     schema.TypeString,
 				ForceNew: true,
-				Required: true,
+				Optional: true,
 			},
 
 			"domain_name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
+			},
+
+			"certificate_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
 				ForceNew: true,
 			},
 
@@ -72,13 +78,31 @@ func resourceAwsApiGatewayDomainNameCreate(d *schema.ResourceData, meta interfac
 	conn := meta.(*AWSClient).apigateway
 	log.Printf("[DEBUG] Creating API Gateway Domain Name")
 
-	domainName, err := conn.CreateDomainName(&apigateway.CreateDomainNameInput{
-		CertificateBody:       aws.String(d.Get("certificate_body").(string)),
-		CertificateChain:      aws.String(d.Get("certificate_chain").(string)),
-		CertificateName:       aws.String(d.Get("certificate_name").(string)),
-		CertificatePrivateKey: aws.String(d.Get("certificate_private_key").(string)),
-		DomainName:            aws.String(d.Get("domain_name").(string)),
-	})
+	params := &apigateway.CreateDomainNameInput{
+		DomainName: aws.String(d.Get("domain_name").(string)),
+	}
+
+	if v, ok := d.GetOk("certificate_arn"); ok {
+		params.CertificateArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("certificate_name"); ok {
+		params.CertificateName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("certificate_body"); ok {
+		params.CertificateBody = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("certificate_chain"); ok {
+		params.CertificateChain = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("certificate_private_key"); ok {
+		params.CertificatePrivateKey = aws.String(v.(string))
+	}
+
+	domainName, err := conn.CreateDomainName(params)
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway Domain Name: %s", err)
 	}
@@ -113,6 +137,7 @@ func resourceAwsApiGatewayDomainNameRead(d *schema.ResourceData, meta interface{
 	}
 	d.Set("cloudfront_domain_name", domainName.DistributionDomainName)
 	d.Set("domain_name", domainName.DomainName)
+	d.Set("certificate_arn", domainName.CertificateArn)
 
 	return nil
 }
