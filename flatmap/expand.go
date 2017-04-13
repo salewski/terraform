@@ -114,6 +114,19 @@ func expandArray(m map[string]string, prefix string) []interface{} {
 }
 
 func expandMap(m map[string]string, prefix string) map[string]interface{} {
+	num, err := strconv.ParseInt(m[prefix+"%"], 0, 0)
+	if err != nil {
+		panic(err)
+	}
+
+	// If the number of elements in this map is 0, then return an
+	// empty map as there is nothing to expand. Trying to expand it
+	// anyway could lead to crashes as any child maps, arrays or sets
+	// that no longer exist are still shown as empty with a count of 0.
+	if num == 0 {
+		return map[string]interface{}{}
+	}
+
 	result := make(map[string]interface{})
 	for k := range m {
 		if !strings.HasPrefix(k, prefix) {

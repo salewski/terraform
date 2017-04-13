@@ -38,6 +38,7 @@ func TestExpand(t *testing.T) {
 		{
 			Map: map[string]string{
 				"foo.#":         "1",
+				"foo.0.%":       "3",
 				"foo.0.name":    "bar",
 				"foo.0.port":    "3000",
 				"foo.0.enabled": "true",
@@ -55,6 +56,7 @@ func TestExpand(t *testing.T) {
 		{
 			Map: map[string]string{
 				"foo.#":         "1",
+				"foo.0.%":       "2",
 				"foo.0.name":    "bar",
 				"foo.0.ports.#": "2",
 				"foo.0.ports.0": "1",
@@ -123,6 +125,7 @@ func TestExpand(t *testing.T) {
 		{
 			Map: map[string]string{
 				"computed_set.#":       "1",
+				"computed_set.~1234.%": "3",
 				"computed_set.~1234.a": "a",
 				"computed_set.~1234.b": "b",
 				"computed_set.~1234.c": "c",
@@ -136,6 +139,7 @@ func TestExpand(t *testing.T) {
 		{
 			Map: map[string]string{
 				"struct.#":         "1",
+				"struct.0.%":       "2",
 				"struct.0.name":    "hello",
 				"struct.0.rules.#": hil.UnknownValue,
 			},
@@ -151,6 +155,7 @@ func TestExpand(t *testing.T) {
 		{
 			Map: map[string]string{
 				"struct.#":           "1",
+				"struct.0.%":         "2",
 				"struct.0.name":      "hello",
 				"struct.0.set.#":     "0",
 				"struct.0.set.0.key": "value",
@@ -163,17 +168,29 @@ func TestExpand(t *testing.T) {
 				},
 			},
 		},
+
+		{
+			Map: map[string]string{
+				"empty_map_of_sets.%":         "0",
+				"empty_map_of_sets.set1.#":    "0",
+				"empty_map_of_sets.set1.1234": "x",
+			},
+			Key:    "empty_map_of_sets",
+			Output: map[string]interface{}{},
+		},
 	}
 
 	for _, tc := range cases {
-		actual := Expand(tc.Map, tc.Key)
-		if !reflect.DeepEqual(actual, tc.Output) {
-			t.Errorf(
-				"Key: %v\nMap:\n\n%#v\n\nOutput:\n\n%#v\n\nExpected:\n\n%#v\n",
-				tc.Key,
-				tc.Map,
-				actual,
-				tc.Output)
-		}
+		t.Run(tc.Key, func(t *testing.T) {
+			actual := Expand(tc.Map, tc.Key)
+			if !reflect.DeepEqual(actual, tc.Output) {
+				t.Errorf(
+					"Key: %v\nMap:\n\n%#v\n\nOutput:\n\n%#v\n\nExpected:\n\n%#v\n",
+					tc.Key,
+					tc.Map,
+					actual,
+					tc.Output)
+			}
+		})
 	}
 }
