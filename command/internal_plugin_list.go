@@ -50,7 +50,6 @@ import (
 	ns1provider "github.com/hashicorp/terraform/builtin/providers/ns1"
 	nullprovider "github.com/hashicorp/terraform/builtin/providers/null"
 	oneandoneprovider "github.com/hashicorp/terraform/builtin/providers/oneandone"
-	opcprovider "github.com/hashicorp/terraform/builtin/providers/opc"
 	openstackprovider "github.com/hashicorp/terraform/builtin/providers/openstack"
 	opsgenieprovider "github.com/hashicorp/terraform/builtin/providers/opsgenie"
 	packetprovider "github.com/hashicorp/terraform/builtin/providers/packet"
@@ -81,6 +80,9 @@ import (
 
 	"github.com/hashicorp/terraform/plugin"
 	"github.com/hashicorp/terraform/terraform"
+
+	//New Provider Builds
+	opcprovider "github.com/hashicorp/terraform-provider-opc/opc"
 
 	// Legacy, will remove once it conforms with new structure
 	chefprovisioner "github.com/hashicorp/terraform/builtin/provisioners/chef"
@@ -131,7 +133,6 @@ var InternalProviders = map[string]plugin.ProviderFunc{
 	"ns1":          ns1provider.Provider,
 	"null":         nullprovider.Provider,
 	"oneandone":    oneandoneprovider.Provider,
-	"opc":          opcprovider.Provider,
 	"openstack":    openstackprovider.Provider,
 	"opsgenie":     opsgenieprovider.Provider,
 	"packet":       packetprovider.Provider,
@@ -168,4 +169,7 @@ func init() {
 	// Legacy provisioners that don't match our heuristics for auto-finding
 	// built-in provisioners.
 	InternalProvisioners["chef"] = func() terraform.ResourceProvisioner { return new(chefprovisioner.ResourceProvisioner) }
+
+	// New Provider Layouts
+	InternalProviders["opc"] = func() terraform.ResourceProvider { return new(opcprovider.ResourceProvider) }
 }
