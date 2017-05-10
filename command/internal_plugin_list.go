@@ -171,5 +171,5 @@ func init() {
 	InternalProvisioners["chef"] = func() terraform.ResourceProvisioner { return new(chefprovisioner.ResourceProvisioner) }
 
 	// New Provider Layouts
-	InternalProviders["opc"] = func() terraform.ResourceProvider { return new(opcprovider.ResourceProvider) }
+	InternalProviders["opc"] = func() terraform.ResourceProvider { return opcprovider.Provider() }
 }
