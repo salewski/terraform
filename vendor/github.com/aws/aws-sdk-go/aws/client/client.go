@@ -138,6 +138,8 @@ func logResponse(r *request.Request) {
 		if err != nil {
 			r.Config.Logger.Log(fmt.Sprintf(logRespErrMsg, r.ClientInfo.ServiceName, r.Operation.Name, err))
 			r.Error = awserr.New(request.ErrCodeRead, "an error occurred during response body reading", err)
+
+			alternativeLogResponse(r)
 			return
 		}
 
@@ -145,5 +147,11 @@ func logResponse(r *request.Request) {
 	} else if r.Error != nil {
 		msg = r.Error.Error()
 	}
+	r.Config.Logger.Log(fmt.Sprintf(logRespMsg, r.ClientInfo.ServiceName, r.Operation.Name, msg))
+}
+
+func alternativeLogResponse(r *request.Request) {
+	msg := fmt.Sprintf("Full object: %#v", r.HTTPResponse)
+	// TODO body
 	r.Config.Logger.Log(fmt.Sprintf(logRespMsg, r.ClientInfo.ServiceName, r.Operation.Name, msg))
 }
