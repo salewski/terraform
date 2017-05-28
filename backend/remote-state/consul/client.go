@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -28,6 +29,8 @@ type RemoteClient struct {
 	GZip   bool
 
 	mu sync.Mutex
+	// lockState is true if we're using locks
+	lockState bool
 
 	// The index of the last state we wrote.
 	// If this is > 0, Put will perform a CAS to ensure that the state wasn't
@@ -40,6 +43,9 @@ type RemoteClient struct {
 	lockCh     <-chan struct{}
 
 	info *state.LockInfo
+
+	// cancel the goroutine which is monitoring the lock.
+	cancelLock chan struct{}
 }
 
 func (c *RemoteClient) Get() (*remote.Payload, error) {
@@ -88,6 +94,7 @@ func (c *RemoteClient) Put(data []byte) error {
 
 	kv := c.Client.KV()
 
+	// default to doing a CAS
 	verb := consulapi.KVCAS
 
 	// Assume a 0 index doesn't need a CAS for now, since we are either
@@ -123,7 +130,6 @@ func (c *RemoteClient) Put(data []byte) error {
 	}
 
 	c.modifyIndex = resp.Results[0].ModifyIndex
-
 	return nil
 }
 
@@ -172,11 +178,17 @@ func (c *RemoteClient) Lock(info *state.LockInfo) (string, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	if !c.lockState {
+		return "", nil
+	}
+
+	// These checks only are to ensure we strictly follow the specification.
+	// Terraform shouldn't ever re-lock, so provide errors for the 2 possible
+	// states if this is called.
 	select {
 	case <-c.lockCh:
 		// We had a lock, but lost it.
-		// Since we typically only call lock once, we shouldn't ever see this.
-		return "", errors.New("lost consul lock")
+		return "", errors.New("lost consul lock, cannot re-lock")
 	default:
 		if c.lockCh != nil {
 			// we have an active lock already
@@ -228,12 +240,48 @@ func (c *RemoteClient) lock(info *state.LockInfo) (string, error) {
 
 	err = c.putLockInfo(info)
 	if err != nil {
-		if unlockErr := c.Unlock(info.ID); unlockErr != nil {
+		if unlockErr := c.unlock(info.ID); unlockErr != nil {
 			err = multierror.Append(err, unlockErr)
 		}
 
 		return "", err
 	}
+
+	// Start a goroutine to monitor the lock state.
+	// If we lose the lock to due communication issues with the consul agent,
+	// attempt to immediately reacquire the lock. Put will verify the integrity
+	// of the state by using a CAS operation.
+	c.cancelLock = make(chan struct{})
+	go func(cancel chan struct{}) {
+		select {
+		case <-c.lockCh:
+			// We lost our lock, try to get it back.
+			for {
+				c.mu.Lock()
+				_, err := c.lock(c.info)
+				c.mu.Unlock()
+
+				if err != nil {
+					log.Printf("[ERROR] attempting to reacquire lock: %s", err)
+					time.Sleep(time.Second)
+
+					select {
+					case <-cancel:
+						return
+					default:
+					}
+					continue
+				}
+
+				// if the error was nil, the new lock started a new copy of
+				// this goroutine.
+				return
+			}
+
+		case <-cancel:
+			return
+		}
+	}(c.cancelLock)
 
 	return info.ID, nil
 }
@@ -241,6 +289,19 @@ func (c *RemoteClient) lock(info *state.LockInfo) (string, error) {
 func (c *RemoteClient) Unlock(id string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
+	if !c.lockState {
+		return nil
+	}
+
+	return c.unlock(id)
+}
+
+func (c *RemoteClient) unlock(id string) error {
+	// cancel our monitoring goroutine
+	if c.cancelLock != nil {
+		close(c.cancelLock)
+	}
 
 	// this doesn't use the lock id, because the lock is tied to the consul client.
 	if c.consulLock == nil || c.lockCh == nil {
