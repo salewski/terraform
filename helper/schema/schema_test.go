@@ -3353,6 +3353,26 @@ func TestSchemaMap_InternalValidate(t *testing.T) {
 			},
 			true,
 		},
+
+		"invalid field name format #1": {
+			map[string]*Schema{
+				"with space": &Schema{
+					Type:     TypeString,
+					Optional: true,
+				},
+			},
+			true,
+		},
+
+		"invalid field name format #2": {
+			map[string]*Schema{
+				"WithCapitals": &Schema{
+					Type:     TypeString,
+					Optional: true,
+				},
+			},
+			true,
+		},
 	}
 
 	for tn, tc := range cases {
