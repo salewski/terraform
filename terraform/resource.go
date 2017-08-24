@@ -88,6 +88,20 @@ func (i *InstanceInfo) HumanId() string {
 		i.Id)
 }
 
+// ResourceAddress returns the address of the resource that the receiver is describing.
+func (i *InstanceInfo) ResourceAddress() *ResourceAddress {
+	addr, err := parseResourceAddressInternal(i.Id)
+	if err != nil {
+		// should never happen, since that would indicate a bug in the
+		// code that constructed this InstanceInfo.
+		panic(fmt.Errorf("InstanceInfo has invalid Id %s", i.Id))
+	}
+	if len(i.ModulePath) > 1 {
+		addr.Path = i.ModulePath[1:] // trim off "root" prefix, which is implied
+	}
+	return addr
+}
+
 func (i *InstanceInfo) uniqueId() string {
 	prefix := i.HumanId()
 	if v := i.uniqueExtra; v != "" {
