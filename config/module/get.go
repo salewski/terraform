@@ -94,6 +94,14 @@ var detectors = []getter.Detector{
 // "http", "./", "/", "getter::"
 var skipRegistry = regexp.MustCompile(`^(http|\./|/|[A-Za-z0-9]+::)`).MatchString
 
+var detectors = []getter.Detector{
+	new(getter.GitHubDetector),
+	new(getter.BitBucketDetector),
+	new(getter.S3Detector),
+	new(getter.FileDetector),
+	new(registryDetector),
+}
+
 // registryDetector implements getter.Detector to detect Terraform Registry modules.
 // If a path looks like a registry module identifier, attempt to locate it in
 // the registry. If it's not found, pass it on in case it can be found by
