@@ -94,14 +94,6 @@ var detectors = []getter.Detector{
 // "http", "./", "/", "getter::"
 var skipRegistry = regexp.MustCompile(`^(http|\./|/|[A-Za-z0-9]+::)`).MatchString
 
-var detectors = []getter.Detector{
-	new(getter.GitHubDetector),
-	new(getter.BitBucketDetector),
-	new(getter.S3Detector),
-	new(getter.FileDetector),
-	new(registryDetector),
-}
-
 // registryDetector implements getter.Detector to detect Terraform Registry modules.
 // If a path looks like a registry module identifier, attempt to locate it in
 // the registry. If it's not found, pass it on in case it can be found by
@@ -140,8 +132,20 @@ func (d registryDetector) lookupModule(src string) (string, bool, error) {
 		d.client = cleanhttp.DefaultClient()
 	}
 
-	download := fmt.Sprintf("%s/%s/download", d.api, src)
-	resp, err := d.client.Get(download)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s/download", d.api, src), nil)
+	if err != nil {
+		log.Println("[ERROR] invalid registry request: %s", err)
+		return "", false, nil
+	}
+
+	username := os.Getenv("TF_REGISTRY_USER")
+	pass := os.Getenv("TF_REGISTRY_PASS")
+
+	if username != "" {
+		req.SetBasicAuth(username, pass)
+	}
+
+	resp, err := d.client.Do(req)
 	if err != nil {
 		log.Println("[WARN] error looking up module %q: %s", src, err)
 		return "", false, nil
@@ -151,7 +155,7 @@ func (d registryDetector) lookupModule(src string) (string, bool, error) {
 	// there should be no body, but save it for logging
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("[WARN] error reading response body from %q: %s", download, err)
+		fmt.Println("[WARN] error reading response body from registry: %s", err)
 		return "", false, nil
 	}
 
