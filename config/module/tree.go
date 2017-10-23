@@ -158,9 +158,12 @@ func (t *Tree) Name() string {
 // module trees inherently require the configuration to be in a reasonably
 // sane state: no circular dependencies, proper module sources, etc. A full
 // suite of validations can be done by running Validate (after loading).
-func (t *Tree) Load(s getter.Storage, mode GetMode) error {
+func (t *Tree) Load(storage getter.Storage, mode GetMode) error {
 	t.lock.Lock()
 	defer t.lock.Unlock()
+
+	// discover where our modules are going to be stored
+	s := newModuleStorage(storage)
 
 	// Reset the children if we have any
 	t.children = nil
@@ -206,7 +209,7 @@ func (t *Tree) Load(s getter.Storage, mode GetMode) error {
 		// In order to load the Tree we need to find out if there was another
 		// subDir stored from discovery.
 		if found && mode != GetModeUpdate {
-			subDir, err := getModuleRoot(dir)
+			subDir, err := s.getModuleRoot(dir)
 			if err != nil {
 				// If there's a problem with the subdir record, we'll let the
 				// recordSubdir method fix it up.  Any other errors filesystem
@@ -245,7 +248,7 @@ func (t *Tree) Load(s getter.Storage, mode GetMode) error {
 
 		log.Printf("[TRACE] getting module source %q", source)
 
-		dir, ok, err := getStorage(s, key, source, mode)
+		dir, ok, err := s.getStorage(key, source, mode)
 		if err != nil {
 			return err
 		}
@@ -268,7 +271,7 @@ func (t *Tree) Load(s getter.Storage, mode GetMode) error {
 
 			subDir = fullDir[len(dir)+1:]
 
-			if err := recordModuleRoot(dir, subDir); err != nil {
+			if err := s.recordModuleRoot(dir, subDir); err != nil {
 				return err
 			}
 			dir = fullDir

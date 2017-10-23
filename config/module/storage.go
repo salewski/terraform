@@ -6,7 +6,12 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"reflect"
+
+	getter "github.com/hashicorp/go-getter"
 )
+
+const manifestName = "modules.json"
 
 // moduleManifest is the serialization structure used to record the stored
 // module's metadata.
@@ -39,21 +44,47 @@ type moduleRecord struct {
 	Root string
 }
 
-// Return the path to the manifest in parent of the storage directory dir.
-func moduleManifestPath(dir string) string {
-	const filename = "modules.json"
-	// Get the parent directory.
-	// The current FolderStorage implementation needed to be able to create
-	// this directory, so we can be reasonably certain we can use it.
-	parent := filepath.Dir(filepath.Clean(dir))
-	return filepath.Join(parent, filename)
+// moduleStorage implements methods to record and fetch metadata about the
+// modules that have been fetched and stored locally. The getter.Storgae
+// abstraction doesn't provide the information needed to know which versions of
+// a module have been stored, or their location.
+type moduleStorage struct {
+	getter.Storage
+	storageDir string
+}
+
+func newModuleStorage(s getter.Storage) moduleStorage {
+	return moduleStorage{
+		Storage:    s,
+		storageDir: storageDir(s),
+	}
+}
+
+// The Tree needs to know where to store the module manifest.
+// Th Storage abstraction doesn't provide access to the storage root directory,
+// so we extract it here.
+// TODO: This needs to be replaced by refactoring the getter.Storage usage for
+//       modules.
+func storageDir(s getter.Storage) string {
+	// get the StorageDir directly if possible
+	switch t := s.(type) {
+	case *getter.FolderStorage:
+		return t.StorageDir
+	case moduleStorage:
+		return t.storageDir
+	}
+
+	// this should be our UI wrapper which is exported here, so we need to
+	// extract the FolderStorage via reflection.
+	fs := reflect.ValueOf(s).Elem().FieldByName("Storage").Interface()
+	return storageDir(fs.(getter.Storage))
 }
 
 // loadManifest returns the moduleManifest file from the parent directory.
-func loadManifest(dir string) (moduleManifest, error) {
+func (m moduleStorage) loadManifest() (moduleManifest, error) {
 	manifest := moduleManifest{}
 
-	manifestPath := moduleManifestPath(dir)
+	manifestPath := filepath.Join(m.storageDir, manifestName)
 	data, err := ioutil.ReadFile(manifestPath)
 	if err != nil && !os.IsNotExist(err) {
 		return manifest, err
@@ -73,50 +104,50 @@ func loadManifest(dir string) (moduleManifest, error) {
 // root directory. The storage method loads the entire file and rewrites it
 // each time. This is only done a few times during init, so efficiency is
 // not a concern.
-func recordModule(dir string, m moduleRecord) error {
-	manifest, err := loadManifest(dir)
+func (m moduleStorage) recordModule(rec moduleRecord) error {
+	manifest, err := m.loadManifest()
 	if err != nil {
 		// if there was a problem with the file, we will attempt to write a new
 		// one. Any non-data related error should surface there.
-		log.Printf("[WARN] error reading module manifest from %q: %s", dir, err)
+		log.Printf("[WARN] error reading module manifest: %s", err)
 	}
 
 	// do nothing if we already have the exact module
 	for i, stored := range manifest.Modules {
-		if m == stored {
+		if rec == stored {
 			return nil
 		}
 
 		// they are not equal, but if the storage path is the same we need to
-		// remove this record to be replaced.
-		if m.Dir == stored.Dir {
+		// remove this rec to be replaced.
+		if rec.Dir == stored.Dir {
 			manifest.Modules[i] = manifest.Modules[len(manifest.Modules)-1]
 			manifest.Modules = manifest.Modules[:len(manifest.Modules)-1]
 			break
 		}
 	}
 
-	manifest.Modules = append(manifest.Modules, m)
+	manifest.Modules = append(manifest.Modules, rec)
 
 	js, err := json.Marshal(manifest)
 	if err != nil {
 		panic(err)
 	}
 
-	manifestPath := moduleManifestPath(dir)
+	manifestPath := filepath.Join(m.storageDir, manifestName)
 	return ioutil.WriteFile(manifestPath, js, 0644)
 }
 
 // return only the root directory of the module stored in dir.
-func getModuleRoot(dir string) (string, error) {
-	manifest, err := loadManifest(dir)
+func (m moduleStorage) getModuleRoot(dir string) (string, error) {
+	manifest, err := m.loadManifest()
 	if err != nil {
 		return "", err
 	}
 
-	for _, m := range manifest.Modules {
-		if m.Dir == dir {
-			return m.Root, nil
+	for _, mod := range manifest.Modules {
+		if mod.Dir == dir {
+			return mod.Root, nil
 		}
 	}
 	return "", nil
@@ -124,11 +155,26 @@ func getModuleRoot(dir string) (string, error) {
 
 // record only the Root directory for the module stored at dir.
 // TODO: remove this compatibility function to store the full moduleRecord.
-func recordModuleRoot(dir, root string) error {
-	m := moduleRecord{
+func (m moduleStorage) recordModuleRoot(dir, root string) error {
+	rec := moduleRecord{
 		Dir:  dir,
 		Root: root,
 	}
 
-	return recordModule(dir, m)
+	return m.recordModule(rec)
+}
+
+func (m moduleStorage) getStorage(key string, src string, mode GetMode) (string, bool, error) {
+	// Get the module with the level specified if we were told to.
+	if mode > GetModeNone {
+		log.Printf("[DEBUG] fetching %q with key %q", src, key)
+		if err := m.Storage.Get(key, src, mode == GetModeUpdate); err != nil {
+			return "", false, err
+		}
+	}
+
+	// Get the directory where the module is.
+	dir, found, err := m.Storage.Dir(key)
+	log.Printf("[DEBUG] found %q in %q: %t", src, dir, found)
+	return dir, found, err
 }
