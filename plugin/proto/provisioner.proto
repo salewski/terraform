@@ -1,0 +1,28 @@
+syntax = "proto3";
+package proto;
+
+import "provider.proto";
+
+service Provisioner {
+    rpc ValidateProvisionerConfig(ValidateProvisionerConfig.Request) returns (ValidateProvisionerConfig.Response);
+    rpc Apply(ProvisionerApply.Request) returns (stream ProvisionerApply.Response);
+    rpc Stop(Stop.Request) returns (Stop.Response);
+}
+
+message ValidateProvisionerConfig {
+    message Request {
+        DynamicValue config = 1;
+    }
+    message Response {
+        repeated Diagnostic diagnostics = 15;
+    }
+}
+
+message ProvisionerApply {
+    message Request {
+        DynamicValue config = 1;
+    }
+    message Response {
+        string output  = 1;
+    }   
+}
