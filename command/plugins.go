@@ -356,10 +356,11 @@ func internalPluginClient(kind, name string) (*plugin.Client, error) {
 	cmdArgv := strings.Split(cmdLine, TFSPACE)
 
 	cfg := &plugin.ClientConfig{
-		Cmd:             exec.Command(cmdArgv[0], cmdArgv[1:]...),
-		HandshakeConfig: tfplugin.Handshake,
-		Managed:         true,
-		Plugins:         tfplugin.PluginMap,
+		Cmd:              exec.Command(cmdArgv[0], cmdArgv[1:]...),
+		HandshakeConfig:  tfplugin.Handshake,
+		Managed:          true,
+		Plugins:          tfplugin.PluginMap,
+		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
 	}
 
 	return plugin.NewClient(cfg), nil
