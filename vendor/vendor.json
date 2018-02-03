@@ -2292,10 +2292,12 @@
 			"versionExact": "master"
 		},
 		{
-			"checksumSHA1": "9jjO5GjLa0XF/nfWihF02RoH4qc=",
+			"checksumSHA1": "GtamqiJoL7PGHsN454AoffBFMa8=",
 			"path": "golang.org/x/net/context",
-			"revision": "f2499483f923065a842d38eb4c7f1927e6fc6e6d",
-			"revisionTime": "2017-01-14T04:22:49Z"
+			"revision": "ab555f366c4508dbe0802550b1b20c46c5c18aa0",
+			"revisionTime": "2018-01-10T21:41:16Z",
+			"version": "master",
+			"versionExact": "master"
 		},
 		{
 			"checksumSHA1": "WHc3uByvGaMcnSoI21fhzYgbOgg=",
