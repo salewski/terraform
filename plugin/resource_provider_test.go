@@ -17,7 +17,7 @@ func TestResourceProvider_impl(t *testing.T) {
 func TestResourceProvider_stop(t *testing.T) {
 	// Create a mock provider
 	p := new(terraform.MockResourceProvider)
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -32,7 +32,7 @@ func TestResourceProvider_stop(t *testing.T) {
 	// Stop
 	e := provider.Stop()
 	if !p.StopCalled {
-		t.Fatal("stop should be called")
+		t.Fatal("Stop should be called")
 	}
 	if e != nil {
 		t.Fatalf("bad: %#v", e)
@@ -44,7 +44,7 @@ func TestResourceProvider_stopErrors(t *testing.T) {
 	p.StopReturnError = errors.New("foo")
 
 	// Create a mock provider
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -59,7 +59,7 @@ func TestResourceProvider_stopErrors(t *testing.T) {
 	// Stop
 	e := provider.Stop()
 	if !p.StopCalled {
-		t.Fatal("stop should be called")
+		t.Fatal("Stop should be called")
 	}
 	if e == nil {
 		t.Fatal("should have error")
@@ -72,7 +72,7 @@ func TestResourceProvider_stopErrors(t *testing.T) {
 func TestResourceProvider_input(t *testing.T) {
 	// Create a mock provider
 	p := new(terraform.MockResourceProvider)
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -97,7 +97,7 @@ func TestResourceProvider_input(t *testing.T) {
 	}
 	actual, err := provider.Input(input, config)
 	if !p.InputCalled {
-		t.Fatal("input should be called")
+		t.Fatal("Input should be called")
 	}
 	if !reflect.DeepEqual(p.InputConfig, config) {
 		t.Fatalf("bad: %#v", p.InputConfig)
@@ -114,7 +114,7 @@ func TestResourceProvider_input(t *testing.T) {
 func TestResourceProvider_configure(t *testing.T) {
 	// Create a mock provider
 	p := new(terraform.MockResourceProvider)
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -132,7 +132,7 @@ func TestResourceProvider_configure(t *testing.T) {
 	}
 	e := provider.Configure(config)
 	if !p.ConfigureCalled {
-		t.Fatal("configure should be called")
+		t.Fatal("Configure should be called")
 	}
 	if !reflect.DeepEqual(p.ConfigureConfig, config) {
 		t.Fatalf("bad: %#v", p.ConfigureConfig)
@@ -147,7 +147,7 @@ func TestResourceProvider_configure_errors(t *testing.T) {
 	p.ConfigureReturnError = errors.New("foo")
 
 	// Create a mock provider
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -165,7 +165,7 @@ func TestResourceProvider_configure_errors(t *testing.T) {
 	}
 	e := provider.Configure(config)
 	if !p.ConfigureCalled {
-		t.Fatal("configure should be called")
+		t.Fatal("Configure should be called")
 	}
 	if !reflect.DeepEqual(p.ConfigureConfig, config) {
 		t.Fatalf("bad: %#v", p.ConfigureConfig)
@@ -182,7 +182,7 @@ func TestResourceProvider_configure_warnings(t *testing.T) {
 	p := new(terraform.MockResourceProvider)
 
 	// Create a mock provider
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -200,7 +200,7 @@ func TestResourceProvider_configure_warnings(t *testing.T) {
 	}
 	e := provider.Configure(config)
 	if !p.ConfigureCalled {
-		t.Fatal("configure should be called")
+		t.Fatal("Configure should be called")
 	}
 	if !reflect.DeepEqual(p.ConfigureConfig, config) {
 		t.Fatalf("bad: %#v", p.ConfigureConfig)
@@ -214,7 +214,7 @@ func TestResourceProvider_apply(t *testing.T) {
 	p := new(terraform.MockResourceProvider)
 
 	// Create a mock provider
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -236,7 +236,7 @@ func TestResourceProvider_apply(t *testing.T) {
 	diff := &terraform.InstanceDiff{}
 	newState, err := provider.Apply(info, state, diff)
 	if !p.ApplyCalled {
-		t.Fatal("apply should be called")
+		t.Fatal("Apply should be called")
 	}
 	if !reflect.DeepEqual(p.ApplyDiff, diff) {
 		t.Fatalf("bad: %#v", p.ApplyDiff)
@@ -253,7 +253,7 @@ func TestResourceProvider_diff(t *testing.T) {
 	p := new(terraform.MockResourceProvider)
 
 	// Create a mock provider
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -282,7 +282,7 @@ func TestResourceProvider_diff(t *testing.T) {
 	}
 	diff, err := provider.Diff(info, state, config)
 	if !p.DiffCalled {
-		t.Fatal("diff should be called")
+		t.Fatal("Diff should be called")
 	}
 	if !reflect.DeepEqual(p.DiffDesired, config) {
 		t.Fatalf("bad: %#v", p.DiffDesired)
@@ -299,7 +299,7 @@ func TestResourceProvider_diff_error(t *testing.T) {
 	p := new(terraform.MockResourceProvider)
 
 	// Create a mock provider
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -321,7 +321,7 @@ func TestResourceProvider_diff_error(t *testing.T) {
 	}
 	diff, err := provider.Diff(info, state, config)
 	if !p.DiffCalled {
-		t.Fatal("diff should be called")
+		t.Fatal("Diff should be called")
 	}
 	if !reflect.DeepEqual(p.DiffDesired, config) {
 		t.Fatalf("bad: %#v", p.DiffDesired)
@@ -338,7 +338,7 @@ func TestResourceProvider_refresh(t *testing.T) {
 	p := new(terraform.MockResourceProvider)
 
 	// Create a mock provider
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -359,7 +359,7 @@ func TestResourceProvider_refresh(t *testing.T) {
 	state := &terraform.InstanceState{}
 	newState, err := provider.Refresh(info, state)
 	if !p.RefreshCalled {
-		t.Fatal("refresh should be called")
+		t.Fatal("Refresh should be called")
 	}
 	if !reflect.DeepEqual(p.RefreshState, state) {
 		t.Fatalf("bad: %#v", p.RefreshState)
@@ -376,7 +376,7 @@ func TestResourceProvider_importState(t *testing.T) {
 	p := new(terraform.MockResourceProvider)
 
 	// Create a mock provider
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -415,7 +415,7 @@ func TestResourceProvider_resources(t *testing.T) {
 	p := new(terraform.MockResourceProvider)
 
 	// Create a mock provider
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -437,7 +437,7 @@ func TestResourceProvider_resources(t *testing.T) {
 	// Resources
 	result := provider.Resources()
 	if !p.ResourcesCalled {
-		t.Fatal("resources should be called")
+		t.Fatal("Resources should be called")
 	}
 	if !reflect.DeepEqual(result, expected) {
 		t.Fatalf("bad: %#v", result)
@@ -448,7 +448,7 @@ func TestResourceProvider_readdataapply(t *testing.T) {
 	p := new(terraform.MockResourceProvider)
 
 	// Create a mock provider
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -486,7 +486,7 @@ func TestResourceProvider_datasources(t *testing.T) {
 	p := new(terraform.MockResourceProvider)
 
 	// Create a mock provider
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -519,7 +519,7 @@ func TestResourceProvider_validate(t *testing.T) {
 	p := new(terraform.MockResourceProvider)
 
 	// Create a mock provider
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -537,7 +537,7 @@ func TestResourceProvider_validate(t *testing.T) {
 	}
 	w, e := provider.Validate(config)
 	if !p.ValidateCalled {
-		t.Fatal("configure should be called")
+		t.Fatal("Validate should be called")
 	}
 	if !reflect.DeepEqual(p.ValidateConfig, config) {
 		t.Fatalf("bad: %#v", p.ValidateConfig)
@@ -554,7 +554,7 @@ func TestResourceProvider_validate_errors(t *testing.T) {
 	p := new(terraform.MockResourceProvider)
 
 	// Create a mock provider
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -574,7 +574,7 @@ func TestResourceProvider_validate_errors(t *testing.T) {
 	}
 	w, e := provider.Validate(config)
 	if !p.ValidateCalled {
-		t.Fatal("configure should be called")
+		t.Fatal("Validate should be called")
 	}
 	if !reflect.DeepEqual(p.ValidateConfig, config) {
 		t.Fatalf("bad: %#v", p.ValidateConfig)
@@ -595,7 +595,7 @@ func TestResourceProvider_validate_warns(t *testing.T) {
 	p := new(terraform.MockResourceProvider)
 
 	// Create a mock provider
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -615,7 +615,7 @@ func TestResourceProvider_validate_warns(t *testing.T) {
 	}
 	w, e := provider.Validate(config)
 	if !p.ValidateCalled {
-		t.Fatal("configure should be called")
+		t.Fatal("Validate should be called")
 	}
 	if !reflect.DeepEqual(p.ValidateConfig, config) {
 		t.Fatalf("bad: %#v", p.ValidateConfig)
@@ -634,7 +634,7 @@ func TestResourceProvider_validateResource(t *testing.T) {
 	p := new(terraform.MockResourceProvider)
 
 	// Create a mock provider
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -652,7 +652,7 @@ func TestResourceProvider_validateResource(t *testing.T) {
 	}
 	w, e := provider.ValidateResource("foo", config)
 	if !p.ValidateResourceCalled {
-		t.Fatal("configure should be called")
+		t.Fatal("ValidateResource should be called")
 	}
 	if p.ValidateResourceType != "foo" {
 		t.Fatalf("bad: %#v", p.ValidateResourceType)
@@ -672,7 +672,7 @@ func TestResourceProvider_validateResource_errors(t *testing.T) {
 	p := new(terraform.MockResourceProvider)
 
 	// Create a mock provider
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -692,7 +692,7 @@ func TestResourceProvider_validateResource_errors(t *testing.T) {
 	}
 	w, e := provider.ValidateResource("foo", config)
 	if !p.ValidateResourceCalled {
-		t.Fatal("configure should be called")
+		t.Fatal("ValidateResource should be called")
 	}
 	if p.ValidateResourceType != "foo" {
 		t.Fatalf("bad: %#v", p.ValidateResourceType)
@@ -716,7 +716,7 @@ func TestResourceProvider_validateResource_warns(t *testing.T) {
 	p := new(terraform.MockResourceProvider)
 
 	// Create a mock provider
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -736,7 +736,7 @@ func TestResourceProvider_validateResource_warns(t *testing.T) {
 	}
 	w, e := provider.ValidateResource("foo", config)
 	if !p.ValidateResourceCalled {
-		t.Fatal("configure should be called")
+		t.Fatal("ValidateResource should be called")
 	}
 	if p.ValidateResourceType != "foo" {
 		t.Fatalf("bad: %#v", p.ValidateResourceType)
@@ -758,7 +758,7 @@ func TestResourceProvider_validateDataSource(t *testing.T) {
 	p := new(terraform.MockResourceProvider)
 
 	// Create a mock provider
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()
@@ -776,7 +776,7 @@ func TestResourceProvider_validateDataSource(t *testing.T) {
 	}
 	w, e := provider.ValidateDataSource("foo", config)
 	if !p.ValidateDataSourceCalled {
-		t.Fatal("configure should be called")
+		t.Fatal("Vonfigure should be called")
 	}
 	if p.ValidateDataSourceType != "foo" {
 		t.Fatalf("bad: %#v", p.ValidateDataSourceType)
@@ -796,7 +796,7 @@ func TestResourceProvider_close(t *testing.T) {
 	p := new(terraform.MockResourceProvider)
 
 	// Create a mock provider
-	client, _ := plugin.TestPluginRPCConn(t, pluginMap(&ServeOpts{
+	client, _ := plugin.TestPluginGRPCConn(t, pluginMap(&ServeOpts{
 		ProviderFunc: testProviderFixed(p),
 	}))
 	defer client.Close()

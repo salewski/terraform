@@ -1,9 +1,13 @@
 package plugin
 
 import (
+	"context"
 	"net/rpc"
 
+	"google.golang.org/grpc"
+
 	"github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/terraform/plugin/proto"
 	"github.com/hashicorp/terraform/terraform"
 )
 
@@ -19,6 +23,20 @@ func (p *ResourceProviderPlugin) Server(b *plugin.MuxBroker) (interface{}, error
 func (p *ResourceProviderPlugin) Client(
 	b *plugin.MuxBroker, c *rpc.Client) (interface{}, error) {
 	return &ResourceProvider{Broker: b, Client: c}, nil
+}
+
+func (p *ResourceProviderPlugin) GRPCServer(_ *plugin.GRPCBroker, s *grpc.Server) error {
+	// TODO: go-plugin always registers all grpc plugins. Refactor
+	// terraform/plugin to not include both types when executing.
+	if p.F == nil {
+		return nil
+	}
+	proto.RegisterProviderServer(s, &GRPCResourceProviderServer{provider: p.F()})
+	return nil
+}
+
+func (p *ResourceProviderPlugin) GRPCClient(ctx context.Context, _ *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
+	return &GRPCResourceProvider{conn: c, client: proto.NewProviderClient(c)}, nil
 }
 
 // ResourceProvider is an implementation of terraform.ResourceProvider
