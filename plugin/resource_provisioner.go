@@ -34,7 +34,9 @@ func (p *ResourceProvisionerPlugin) GRPCServer(_ *plugin.GRPCBroker, s *grpc.Ser
 	return nil
 }
 
-func (p *ResourceProvisionerPlugin) GRPCClient(ctx context.Context, _ *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
+func (p *ResourceProvisionerPlugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
+	// we don't use the broker, so free up the resources
+	broker.Close()
 	return &GRPCResourceProvisioner{
 		conn:   c,
 		client: proto.NewProvisionerClient(c),
