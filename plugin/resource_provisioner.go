@@ -38,6 +38,7 @@ func (p *ResourceProvisionerPlugin) GRPCClient(ctx context.Context, _ *plugin.GR
 	return &GRPCResourceProvisioner{
 		conn:   c,
 		client: proto.NewProvisionerClient(c),
+		ctx:    ctx,
 	}, nil
 }
 

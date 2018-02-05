@@ -68,10 +68,14 @@ func unDynamicValue(v *proto.DynamicValue, i interface{}) {
 type GRPCResourceProvider struct {
 	conn   *grpc.ClientConn
 	client proto.ProviderClient
+
+	// this context is created by the plugin package, and is canceled when the
+	// plugin process ends.
+	ctx context.Context
 }
 
 func (p *GRPCResourceProvider) Stop() error {
-	resp, err := p.client.Stop(context.TODO(), new(proto.Stop_Request))
+	resp, err := p.client.Stop(p.ctx, new(proto.Stop_Request))
 	if err != nil {
 		return err
 	}
@@ -83,7 +87,7 @@ func (p *GRPCResourceProvider) Stop() error {
 }
 
 func (p *GRPCResourceProvider) GetSchema(req *terraform.ProviderSchemaRequest) (*terraform.ProviderSchema, error) {
-	resp, err := p.client.GetSchema(context.TODO(), &proto.GetSchema_Request{})
+	resp, err := p.client.GetSchema(p.ctx, &proto.GetSchema_Request{})
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +105,7 @@ func (p *GRPCResourceProvider) Validate(c *terraform.ResourceConfig) ([]string, 
 	req := &proto.ValidateProviderConfig_Request{
 		Config: dynamicValue(c),
 	}
-	resp, err := p.client.ValidateProviderConfig(context.TODO(), req)
+	resp, err := p.client.ValidateProviderConfig(p.ctx, req)
 	if err != nil {
 		return nil, []error{err}
 	}
@@ -115,7 +119,7 @@ func (p *GRPCResourceProvider) ValidateResource(t string, c *terraform.ResourceC
 		Config:           dynamicValue(c),
 	}
 
-	resp, err := p.client.ValidateResourceTypeConfig(context.TODO(), req)
+	resp, err := p.client.ValidateResourceTypeConfig(p.ctx, req)
 	if err != nil {
 		return nil, []error{err}
 	}
@@ -129,7 +133,7 @@ func (p *GRPCResourceProvider) ValidateDataSource(t string, c *terraform.Resourc
 		Config:         dynamicValue(c),
 	}
 
-	resp, err := p.client.ValidateDataSourceConfig(context.TODO(), req)
+	resp, err := p.client.ValidateDataSourceConfig(p.ctx, req)
 	if err != nil {
 		return nil, []error{err}
 	}
@@ -143,7 +147,7 @@ func (p *GRPCResourceProvider) Configure(c *terraform.ResourceConfig) error {
 		Config: dynamicValue(c),
 	}
 
-	resp, err := p.client.Configure(context.TODO(), req)
+	resp, err := p.client.Configure(p.ctx, req)
 	if err != nil {
 		return err
 	}
@@ -169,7 +173,7 @@ func (p *GRPCResourceProvider) Refresh(info *terraform.InstanceInfo, s *terrafor
 		CurrentState:     dynamicValue(args),
 	}
 
-	resp, err := p.client.ReadResource(context.TODO(), req)
+	resp, err := p.client.ReadResource(p.ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +190,7 @@ func (p *GRPCResourceProvider) Diff(info *terraform.InstanceInfo, s *terraform.I
 		ProposedNewState: dynamicValue(c),
 	}
 
-	resp, err := p.client.PlanResourceChange(context.TODO(), req)
+	resp, err := p.client.PlanResourceChange(p.ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +210,7 @@ func (p *GRPCResourceProvider) Apply(info *terraform.InstanceInfo, s *terraform.
 		PlannedNewState:  dynamicValue(d),
 	}
 
-	resp, err := p.client.ApplyResourceChange(context.TODO(), req)
+	resp, err := p.client.ApplyResourceChange(p.ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +229,7 @@ func (p *GRPCResourceProvider) ImportState(info *terraform.InstanceInfo, id stri
 		Id:               id,
 	}
 
-	resp, err := p.client.ImportResourceState(context.TODO(), req)
+	resp, err := p.client.ImportResourceState(p.ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +261,7 @@ func (p *GRPCResourceProvider) ReadDataDiff(info *terraform.InstanceInfo, c *ter
 		Request: dynamicValue([]interface{}{info, c}),
 	}
 
-	resp, err := p.client.TempDiffDataSource(context.TODO(), req)
+	resp, err := p.client.TempDiffDataSource(p.ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +278,7 @@ func (p *GRPCResourceProvider) ReadDataApply(info *terraform.InstanceInfo, d *te
 		Request: dynamicValue(d),
 	}
 
-	resp, err := p.client.ReadDataSource(context.TODO(), req)
+	resp, err := p.client.ReadDataSource(p.ctx, req)
 	if err != nil {
 		return nil, err
 	}

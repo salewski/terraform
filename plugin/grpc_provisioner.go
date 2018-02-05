@@ -14,13 +14,14 @@ import (
 type GRPCResourceProvisioner struct {
 	conn   *grpc.ClientConn
 	client proto.ProvisionerClient
+	ctx    context.Context
 }
 
 func (p *GRPCResourceProvisioner) Validate(c *terraform.ResourceConfig) ([]string, []error) {
 	req := &proto.ValidateProvisionerConfig_Request{
 		Config: dynamicValue(c),
 	}
-	resp, err := p.client.ValidateProvisionerConfig(context.TODO(), req)
+	resp, err := p.client.ValidateProvisionerConfig(p.ctx, req)
 	if err != nil {
 		return nil, []error{err}
 	}
@@ -41,7 +42,7 @@ func (p *GRPCResourceProvisioner) Apply(out terraform.UIOutput, s *terraform.Ins
 		Config: dynamicValue(payload),
 	}
 
-	outputClient, err := p.client.Apply(context.TODO(), req)
+	outputClient, err := p.client.Apply(p.ctx, req)
 	if err != nil {
 		return err
 	}
@@ -63,7 +64,7 @@ func (p *GRPCResourceProvisioner) Apply(out terraform.UIOutput, s *terraform.Ins
 }
 
 func (p *GRPCResourceProvisioner) Stop() error {
-	resp, err := p.client.Stop(context.TODO(), &proto.Stop_Request{})
+	resp, err := p.client.Stop(p.ctx, &proto.Stop_Request{})
 	if err != nil {
 		return err
 	}
