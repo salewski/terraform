@@ -2,7 +2,6 @@ package plugin
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"io"
 
@@ -84,9 +83,7 @@ type GRPCResourceProvisionerServer struct {
 
 func (s *GRPCResourceProvisionerServer) ValidateProvisionerConfig(_ context.Context, req *proto.ValidateProvisionerConfig_Request) (*proto.ValidateProvisionerConfig_Response, error) {
 	cfg := &terraform.ResourceConfig{}
-	if err := json.Unmarshal(req.Config.Msgpack, cfg); err != nil {
-		return nil, err
-	}
+	unDynamicValue(req.Config, cfg)
 
 	w, e := s.provisioner.Validate(cfg)
 	return &proto.ValidateProvisionerConfig_Response{Diagnostics: diagnostics(w, e)}, nil
@@ -98,9 +95,7 @@ func (s *GRPCResourceProvisionerServer) Apply(req *proto.ProvisionerApply_Reques
 		Config *terraform.ResourceConfig
 	}{}
 
-	if err := json.Unmarshal(req.Config.Msgpack, &payload); err != nil {
-		return err
-	}
+	unDynamicValue(req.Config, &payload)
 
 	return s.provisioner.Apply(&grpcOutputServer{server: server}, payload.State, payload.Config)
 }

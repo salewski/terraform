@@ -48,8 +48,7 @@ func warnsAndErrs(diags []*proto.Diagnostic) ([]string, []error) {
 	return warns, errs
 }
 
-// dynamicValue encodes a terraform type into a proto.DynamicValue.
-// Tetmporary function, using JSON for now.
+// Temporary functions to pack and unpack terraform types into a DynamicValue
 func dynamicValue(i interface{}) *proto.DynamicValue {
 	js, err := json.Marshal(i)
 	if err != nil {
@@ -57,6 +56,12 @@ func dynamicValue(i interface{}) *proto.DynamicValue {
 	}
 
 	return &proto.DynamicValue{Msgpack: js}
+}
+
+func unDynamicValue(v *proto.DynamicValue, i interface{}) {
+	if err := json.Unmarshal(v.Msgpack, i); err != nil {
+		panic(err)
+	}
 }
 
 // terraform.ResourceProvider grpc implementation
@@ -83,12 +88,9 @@ func (p *GRPCResourceProvider) GetSchema(req *terraform.ProviderSchemaRequest) (
 		return nil, err
 	}
 
-	var s terraform.ProviderSchema
-	if err := json.Unmarshal(resp.ProviderSchema.Msgpack, &s); err != nil {
-		panic(err)
-	}
-
-	return &s, nil
+	s := &terraform.ProviderSchema{}
+	unDynamicValue(resp.ProviderSchema, s)
+	return s, nil
 }
 
 func (p *GRPCResourceProvider) Input(input terraform.UIInput, c *terraform.ResourceConfig) (*terraform.ResourceConfig, error) {
@@ -173,10 +175,7 @@ func (p *GRPCResourceProvider) Refresh(info *terraform.InstanceInfo, s *terrafor
 	}
 
 	newState := &terraform.InstanceState{}
-	if err := json.Unmarshal(resp.NewState.Msgpack, newState); err != nil {
-		return nil, err
-	}
-
+	unDynamicValue(resp.NewState, newState)
 	return newState, nil
 }
 
@@ -193,11 +192,10 @@ func (p *GRPCResourceProvider) Diff(info *terraform.InstanceInfo, s *terraform.I
 	}
 
 	diff := &terraform.InstanceDiff{}
-	if err := json.Unmarshal(resp.PlannedNewState.Msgpack, diff); err != nil {
-		return nil, err
-	}
+	unDynamicValue(resp.PlannedNewState, diff)
 
 	diags := proto.TFDiagnostics(resp.Diagnostics)
+
 	return diff, diags.Err()
 }
 
@@ -214,11 +212,10 @@ func (p *GRPCResourceProvider) Apply(info *terraform.InstanceInfo, s *terraform.
 	}
 
 	state := &terraform.InstanceState{}
-	if err := json.Unmarshal(resp.NewState.Msgpack, state); err != nil {
-		return nil, err
-	}
+	unDynamicValue(resp.NewState, state)
 
 	diags := proto.TFDiagnostics(resp.Diagnostics)
+
 	return state, diags.Err()
 }
 
@@ -234,9 +231,7 @@ func (p *GRPCResourceProvider) ImportState(info *terraform.InstanceInfo, id stri
 	}
 
 	newState := []*terraform.InstanceState{}
-	if err := json.Unmarshal(resp.NewState.Msgpack, &newState); err != nil {
-		return nil, err
-	}
+	unDynamicValue(resp.NewState, &newState)
 
 	diags := proto.TFDiagnostics(resp.Diagnostics)
 	return newState, diags.Err()
@@ -268,9 +263,7 @@ func (p *GRPCResourceProvider) ReadDataDiff(info *terraform.InstanceInfo, c *ter
 	}
 
 	diff := &terraform.InstanceDiff{}
-	if err := json.Unmarshal(resp.Result.Msgpack, diff); err != nil {
-		return nil, err
-	}
+	unDynamicValue(resp.Result, diff)
 
 	diags := proto.TFDiagnostics(resp.Diagnostics)
 	return diff, diags.Err()
@@ -287,9 +280,7 @@ func (p *GRPCResourceProvider) ReadDataApply(info *terraform.InstanceInfo, d *te
 	}
 
 	state := &terraform.InstanceState{}
-	if err := json.Unmarshal(resp.Result.Msgpack, state); err != nil {
-		return nil, err
-	}
+	unDynamicValue(resp.Result, state)
 
 	diags := proto.TFDiagnostics(resp.Diagnostics)
 	return state, diags.Err()
@@ -331,9 +322,7 @@ func (s *GRPCResourceProviderServer) GetSchema(_ context.Context, req *proto.Get
 
 func (s *GRPCResourceProviderServer) ValidateProviderConfig(_ context.Context, req *proto.ValidateProviderConfig_Request) (*proto.ValidateProviderConfig_Response, error) {
 	rc := &terraform.ResourceConfig{}
-	if err := json.Unmarshal(req.Config.Msgpack, rc); err != nil {
-		return nil, err
-	}
+	unDynamicValue(req.Config, rc)
 
 	warns, errs := s.provider.Validate(rc)
 
@@ -341,22 +330,16 @@ func (s *GRPCResourceProviderServer) ValidateProviderConfig(_ context.Context, r
 }
 
 func (s *GRPCResourceProviderServer) ValidateResourceTypeConfig(_ context.Context, req *proto.ValidateResourceTypeConfig_Request) (*proto.ValidateResourceTypeConfig_Response, error) {
-
 	cfg := &terraform.ResourceConfig{}
-	if err := json.Unmarshal(req.Config.Msgpack, cfg); err != nil {
-		return nil, err
-	}
+	unDynamicValue(req.Config, cfg)
 
 	w, e := s.provider.ValidateResource(req.ResourceTypeName, cfg)
 	return &proto.ValidateResourceTypeConfig_Response{Diagnostics: diagnostics(w, e)}, nil
 }
 
 func (s *GRPCResourceProviderServer) Configure(_ context.Context, req *proto.Configure_Request) (*proto.Configure_Response, error) {
-
 	cfg := &terraform.ResourceConfig{}
-	if err := json.Unmarshal(req.Config.Msgpack, cfg); err != nil {
-		return nil, err
-	}
+	unDynamicValue(req.Config, cfg)
 
 	err := s.provider.Configure(cfg)
 	var errs []error
@@ -373,9 +356,7 @@ func (s *GRPCResourceProviderServer) ReadResource(_ context.Context, req *proto.
 		State *terraform.InstanceState
 	}{}
 
-	if err := json.Unmarshal(req.CurrentState.Msgpack, &args); err != nil {
-		return nil, err
-	}
+	unDynamicValue(req.CurrentState, &args)
 
 	is, err := s.provider.Refresh(args.Info, args.State)
 	if err != nil {
@@ -390,12 +371,8 @@ func (s *GRPCResourceProviderServer) PlanResourceChange(_ context.Context, req *
 	state := &terraform.InstanceState{}
 	cfg := &terraform.ResourceConfig{}
 
-	if err := json.Unmarshal(req.PriorState.Msgpack, state); err != nil {
-		return nil, err
-	}
-	if err := json.Unmarshal(req.ProposedNewState.Msgpack, cfg); err != nil {
-		return nil, err
-	}
+	unDynamicValue(req.PriorState, state)
+	unDynamicValue(req.ProposedNewState, cfg)
 
 	info.Type = req.ResourceTypeName
 
@@ -413,12 +390,8 @@ func (s *GRPCResourceProviderServer) ApplyResourceChange(_ context.Context, req 
 	state := &terraform.InstanceState{}
 	diff := &terraform.InstanceDiff{}
 
-	if err := json.Unmarshal(req.PriorState.Msgpack, state); err != nil {
-		return nil, err
-	}
-	if err := json.Unmarshal(req.PlannedNewState.Msgpack, diff); err != nil {
-		return nil, err
-	}
+	unDynamicValue(req.PriorState, state)
+	unDynamicValue(req.PlannedNewState, diff)
 
 	info.Type = req.ResourceTypeName
 
@@ -444,9 +417,7 @@ func (s *GRPCResourceProviderServer) ImportResourceState(_ context.Context, req 
 
 func (s *GRPCResourceProviderServer) ValidateDataSourceConfig(_ context.Context, req *proto.ValidateDataSourceConfig_Request) (*proto.ValidateDataSourceConfig_Response, error) {
 	cfg := &terraform.ResourceConfig{}
-	if err := json.Unmarshal(req.Config.Msgpack, cfg); err != nil {
-		return nil, err
-	}
+	unDynamicValue(req.Config, cfg)
 
 	w, e := s.provider.ValidateDataSource(req.DataSourceName, cfg)
 	return &proto.ValidateDataSourceConfig_Response{Diagnostics: diagnostics(w, e)}, nil
@@ -457,9 +428,7 @@ func (s *GRPCResourceProviderServer) TempDiffDataSource(_ context.Context, req *
 	info.Type = req.DataSourceName
 
 	cfg := &terraform.ResourceConfig{}
-	if err := json.Unmarshal(req.Request.Msgpack, cfg); err != nil {
-		return nil, err
-	}
+	unDynamicValue(req.Request, cfg)
 
 	diff, err := s.provider.ReadDataDiff(info, cfg)
 	if err != nil {
@@ -474,9 +443,7 @@ func (s *GRPCResourceProviderServer) ReadDataSource(_ context.Context, req *prot
 	info.Type = req.DataSourceName
 
 	diff := &terraform.InstanceDiff{}
-	if err := json.Unmarshal(req.Request.Msgpack, diff); err != nil {
-		return nil, err
-	}
+	unDynamicValue(req.Request, diff)
 
 	state, err := s.provider.ReadDataApply(info, diff)
 	if err != nil {
