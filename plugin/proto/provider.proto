@@ -32,29 +32,6 @@ message DynamicValue {
     bytes msgpack = 1;
 }
 
-message GetResourceTypes {
-    message ResourceType {
-        string name = 1;
-        bool importable = 2;
-    }
-    message Request {
-    }
-    message Response {
-        repeated ResourceType resource_types = 1;
-    }
-}
-
-message GetDataSources {
-    message DataSource {
-        string name = 1;
-    }
-    message Request {
-    }
-    message Response {
-        repeated DataSource data_sources = 1;
-    }
-}
-
 message GetSchema {
     message Request {
     }
