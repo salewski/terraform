@@ -71,7 +71,8 @@ message ValidateDataSourceConfig {
 
 message Configure {
     message Request {
-        DynamicValue config = 1;
+        string terraform_version = 1;
+        DynamicValue config = 2;
     }
     message Response {
         repeated Diagnostic diagnostics = 15;
