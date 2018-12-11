@@ -30,23 +30,39 @@ details. If you are interested, you can find a full definition of HCL
 syntax in
 [the HCL native syntax specification](https://github.com/hashicorp/hcl2/blob/master/hcl/hclsyntax/spec.md).
 
-## Attributes and Blocks
+## Arguments and Blocks
 
 The Terraform language syntax is built around two key syntax constructs:
-attributes and blocks.
+Arguments and blocks.
 
-An _attribute_ assigns a value to a particular name:
+### Arguments
+
+An _argument_ assigns a value to a particular name:
 
 ```hcl
 image_id = "abc123"
 ```
 
-The identifier before the equals sign is the _attribute name_, and after
-the equals sign is the attribute's value. The semantics applied to each
-attribute name define what value types are valid, but many attributes
-accept arbitrary [expressions](/docs/configuration/expressions.html),
-which allow the value to either be specified literally or generated from
-other values programmatically.
+The identifier before the equals sign is the _argument name_, and the expression
+after the equals sign is the argument's value.
+
+The context where the argument appears determines what value types are valid
+(for example, each resource type has a schema that defines the types of its
+arguments), but many arguments accept arbitrary
+[expressions](/docs/configuration/expressions.html), which allow the value to
+either be specified literally or generated from other values programmatically.
+
+-> **Note:** Terraform's configuration language is based on a more general
+language called HCL, and HCL's documentation usually uses the word "attribute"
+instead of "argument." These words are similar enough to be interchangeable in
+this context, and experienced Terraform users might use either term in casual
+conversation. But because Terraform also interacts with several _other_ things
+called "attributes" (in particular, Terraform resources have attributes like
+`id` that can be referenced from expressions but can't be assigned values in
+configuration), we've chosen to use "argument" in the Terraform documentation
+when referring to this syntax construct.
+
+### Blocks
 
 A _block_ is a container for other content:
 
@@ -60,24 +76,16 @@ resource "aws_instance" "example" {
 }
 ```
 
-A block has a _type_ ("resource" in this example). Each block type defines
-how many _labels_ must follow the type keyword. The "resource" block type
-shown here expects two labels, which are "aws_instance" and "example"
+A block has a _type_ (`resource` in this example). Each block type defines
+how many _labels_ must follow the type keyword. The `resource` block type
+shown here expects two labels, which are `aws_instance` and `example`
 in this case. A particular block type may have any number of required labels,
-or it may require none as with the nested "network_interface" block type.
+or it may require none as with the nested `network_interface` block type.
 
 After the block type keyword and any labels, the block _body_ is delimited
-by the `{` and `}` characters. Within the block body, further attributes
+by the `{` and `}` characters. Within the block body, further arguments
 and blocks may be nested, creating a heirarchy of blocks and their associated
-attributes.
-
-Unfortunately, the low-level syntax described here uses the noun "attribute"
-to mean something slightly different to how it is used by the main
-Terraform language. Elsewhere in this documentation, "attribute" usually
-refers to a named value exported by an object that can be accessed in an
-expression, such as the "id" portion of the expression
-`aws_instance.example.id`. To reduce confusion, other documentation uses the
-term "argument" to refer to the syntax-level idea of an attribute.
+arguments.
 
 ### Style Conventions
 
@@ -142,24 +150,22 @@ automatically.
 
 ## Identifiers
 
-Attribute names, block type names, and the names of most Terraform-specific
+Argument names, block type names, and the names of most Terraform-specific
 constructs like resources, input variables, etc. are all _identifiers_.
 The Terraform language implements
 [the Unicode identifier syntax](http://unicode.org/reports/tr31/), extended
 to also include the ASCII hyphen character `-`.
 
 In practice, this means that identifiers can contain letters, digits,
-underscores, and hyphens. To avoid ambiguity with literal numbers, the
-first character of an identifier must not be a digit.
+underscores (`_`), and hyphens (`-`). To avoid ambiguity with literal numbers,
+the first character of an identifier must not be a digit.
 
 ## Comments
 
 The Terraform language supports three different syntaxes for comments:
 
-* `#` begins a single-line comment, ending at the end of the line
-
+* `#` begins a single-line comment, ending at the end of the line.
 * `//` also begins a single-line comment, as an alternative to `#`.
-
 * `/*` and `*/` are start and end delimiters for a comment that might span
   over multiple lines.
 

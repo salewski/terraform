@@ -16,14 +16,17 @@ references to data exported by resources, arithmetic, conditional evaluation,
 and a number of built-in functions.
 
 Expressions can be used in a number of places in the Terraform language,
-but some contexts place restrictions on which expression constructs are allowed,
-such as requiring a literal value of a particular type, or forbidding
-references to resource attributes. The other pages in this section describe
-the contexts where expressions may be used and which expression features
-are allowed in each case.
+but some contexts limit which expression constructs are allowed,
+such as requiring a literal value of a particular type or forbidding
+references to resource attributes. Each language feature's documentation
+describes any restrictions it places on expressions.
 
-The following sections describe all of the features of the configuration
-syntax.
+You can experiment with the behavior of Terraform's expressions from
+the Terraform expression console, by running
+[the `terraform console` command](/docs/commands/console.html).
+
+The rest of this page describes all of the features of Terraform's
+expression syntax.
 
 ## Types and Values
 
@@ -78,7 +81,7 @@ For example, the type `list(string)` means "list of strings", which is a
 different type than `list(number)`, a list of numbers. All elements of a
 collection must always be of the same type.
 
-The three _collection type kinds_ in the Terraform language are:
+The three kinds of collection type in the Terraform language are:
 
 * `list(...)`: a sequence of values identified by consecutive whole numbers
   starting with zero.
@@ -96,7 +99,7 @@ of its elements can be converted to the required element type.
 A _structural_ type is another way to combine multiple values into a single
 value, but structural types allow each value to be of a distinct type.
 
-The two _structural type kinds_ in the Terraform language are:
+The two kinds of structural type in the Terraform language are:
 
 * `object(...)`: has named attributes that each have their own type.
 * `tuple(...)`: has a sequence of elements identified by consecutive whole
@@ -150,7 +153,7 @@ a dot-separated sequence of names like `aws_instance.example`.
 
 The following named objects are available:
 
-* `TYPE.NAME` is an object representing a
+* `RESOURCE_TYPE.NAME` is an object representing a
   [managed resource](/docs/configuration/resources.html) of the given type
   and name. If the resource has the `count` argument set, the value is
   a list of objects representing its instances. Any named object that does
@@ -163,9 +166,9 @@ The following named objects are available:
 * `local.NAME` is the value of the
   [local value](/docs/configuration/locals.html) of the given name.
 
-* `module.MOD_NAME.OUTPUT_NAME` is the value of the
-  [output value](/docs/configuration/outputs.html) of the given name from the
-  [child module call](/docs/configuration/modules.html) of the given name.
+* `module.MOD_NAME.OUTPUT_NAME` is the value of the specified
+  [output value](/docs/configuration/outputs.html) from a
+  [child module](/docs/configuration/modules.html) called by the current module.
 
 * `data.SOURCE.NAME` is an object representing a
   [data resource](/docs/configuration/data-sources.html) of the given data
@@ -188,13 +191,13 @@ The following named objects are available:
 * `terraform.workspace` is the name of the currently selected
   [workspace](/docs/state/workspaces.html).
 
-Terraform analyses the block bodies of constructs such as resources and module
-calls to automatically infer dependencies between objects from the use of
-some of these reference types in expressions. For example, an object with an
-argument expression that refers to a managed resource creates and implicit
-dependency between that object and the resource.
+Constructs like resources and module calls often use expressions in their block
+bodies, and Terraform analyzes these expressions to automatically infer
+dependencies between objects. For example, an expression in a resource argument
+that refers to another managed resource creates an implicit dependency between
+the two resources.
 
-The first name in each of these dot-separated sequence is called a
+The first name in each of these dot-separated sequences is called a
 _variable_, but do not confuse this with the idea of an
 [input variable](/docs/configuration/variables.html), which acts as a
 customization parameter for a module. Input variables are often referred
@@ -265,7 +268,7 @@ opposed to an object with a fixed set of attributes defined by a schema.
 
 An _operator_ is a type of expression that transforms or combines one or more
 other expressions. Operators either combine two values in some way to
-produce a third result value, or simply transform a single given value to
+produce a third result value, or transform a single given value to
 produce a single result.
 
 Operators that work on two values place an operator symbol between the two
@@ -287,7 +290,7 @@ according to a default order of operations:
 | 4     | `>`, `>=`, `<`, `<=` |
 | 3     | `==`, `!=`           |
 | 2     | `&&`                 |
-| 1     | `||`                 |
+| 1     | <code>&#124;&#124;</code> |
 
 Parentheses can be used to override the default order of operations. Without
 parentheses, higher levels are evaluated first, so `1 + 2 * 3` is interpreted
@@ -342,8 +345,8 @@ The logical operators all expect bool values and produce bool values as results.
 
 ## Conditional Expressions
 
-A _conditional expression_ allows the selection of one of two values based
-on whether another bool expression is `true` or `false`.
+A _conditional expression_ uses the value of a bool expression to select one of
+two values.
 
 The syntax of a conditional expression is as follows:
 
@@ -393,26 +396,33 @@ numerically smallest:
 min(55, 3453, 2)
 ```
 
-If the arguments to pass are available in a list or tuple value, that value
-can be _expanded_ into separate arguments using the `...` symbol after that
-argument:
+### Expanding Function Arguments
+
+If the arguments to pass to a function are available in a list or tuple value,
+that value can be _expanded_ into separate arguments. Provide the list value as
+an argument and follow it with the `...` symbol:
 
 ```hcl
 min([55, 2453, 2]...)
 ```
+
+The expansion symbol is three periods (`...`), not a Unicode ellipsis character
+(`…`). Expansion is a special syntax that is only available in function calls.
+
+### Available Functions
 
 For a full list of available functions, see
 [the function reference](/docs/configuration/functions.html).
 
 ## `for` Expressions
 
-A _`for` expression_ allows you create a structural type value by transforming
+A _`for` expression_ creates a structural type value by transforming
 another structural or collection type value. Each element in the input value
 can correspond to either one or zero values in the result, and an arbitrary
 expression can be used to transform each input element into an output element.
 
-For example, if `var.list` is a list of strings then it can be converted to
-a list of strings with all-uppercase letters with the following:
+For example, if `var.list` is a list of strings, then the following expression
+produces a list of strings with all-uppercase letters:
 
 ```hcl
 [for s in var.list: upper(s)]
@@ -436,7 +446,8 @@ This expression produces an object whose attributes are the original elements
 from `var.list` and their corresponding values are the uppercase versions.
 
 A `for` expression can also include an optional `if` clause to filter elements
-from the source collection:
+from the source collection, which can produce a value with fewer elements than
+the source:
 
 ```
 [for s in var.list: upper(s) if s != ""]
@@ -460,17 +471,17 @@ together results that have a common key:
 
 ## Splat Expressions
 
-A _splat expressions_ provides a more concise way to express a common
+A _splat expression_ provides a more concise way to express a common
 operation that could otherwise be performed with a `for` expression.
 
 If `var.list` is a list of objects that all have an attribute `id`, then
-a list of the ids could be obtained using the following `for` expression:
+a list of the ids could be produced with the following `for` expression:
 
 ```
 [for o in var.list: o.id]
 ```
 
-This is equivalent to the following _splat expression_:
+This is equivalent to the following _splat expression:_
 
 ```
 var.list[*].id
@@ -671,12 +682,13 @@ beginning a template sequence, double the leading character: `$${` or `%%{`.
 
 ## String Templates
 
-Within quoted and heredoc string expressions, the sequences `${` and `%{`
-begin _template sequences_. Templates allow expressions to be embedded directly
-into the string sequence, and thus allow strings to be dynamically constructed
-from other values in a concise way.
+Within quoted and heredoc string expressions, the sequences `${` and `%{` begin
+_template sequences_. Templates let you directly embed expressions into a string
+literal, to dynamically construct strings from other values.
 
-A `${ ... }` sequence is an _interpolation_, which evaluates the expression
+### Interpolation
+
+A `${ ... }` sequence is an _interpolation,_ which evaluates the expression
 given between the markers, converts the result to a string if necessary, and
 then inserts it into the final string:
 
@@ -687,40 +699,42 @@ then inserts it into the final string:
 In the above example, the named object `var.name` is accessed and its value
 inserted into the string, producing a result like "Hello, Juan!".
 
+### Directives
+
 A `%{ ... }` sequence is a _directive_, which allows for conditional
-results and iteration over collections, similar to conditional and
+results and iteration over collections, similar to conditional
 and `for` expressions.
 
 The following directives are supported:
 
-* The `if` directive chooses between two templates based on a conditional
-  expression:
+* The `if <BOOL>`/`else`/`endif` directive chooses between two templates based
+  on the value of a bool expression:
 
-  ```hcl
-  "Hello, %{ if var.name != "" }${var.name}%{ else }unnamed%{ endif }!"
-  ```
+    ```hcl
+    "Hello, %{ if var.name != "" }${var.name}%{ else }unnamed%{ endif }!"
+    ```
 
-  The "else" portion may be omitted, in which case the result is an empty
-  string if the condition expression returns `false`.
+    The `else` portion may be omitted, in which case the result is an empty
+    string if the condition expression returns `false`.
 
-* The `for` directive iterates over each of the elements of a given collection
-  or structural value and evaluates a given template once for each element,
-  concatenating the results together:
+* The `for <NAME> in <COLLECTION>` / `endfor` directive iterates over the
+  elements of a given collection or structural value and evaluates a given
+  template once for each element, concatenating the results together:
 
-  ```hcl
-  <<EOT
-  %{ for ip in aws_instance.example.*.private_ip }
-  server ${ip}
-  %{ endfor }
-  EOT
-  ```
+    ```hcl
+    <<EOT
+    %{ for ip in aws_instance.example.*.private_ip }
+    server ${ip}
+    %{ endfor }
+    EOT
+    ```
 
-  The name given immediately after the `for` keyword is used as a temporary
-  variable name which can then be referenced from the nested template.
+    The name given immediately after the `for` keyword is used as a temporary
+    variable name which can then be referenced from the nested template.
 
 To allow for template directives to be formatted for readability without
 introducing unwanted additional spaces and newlines in the result, all
-template sequences can include optional _strip markers_ `~` either immediately
+template sequences can include optional _strip markers_ (`~`) either immediately
 after the introducer or immediately before the end. When present, the sequence
 consumes all of the literal whitespace (spaces and newlines) either before
 or after the sequence:
@@ -744,6 +758,6 @@ server 10.1.16.34
 ```
 
 When using template directives, we recommend always using the "heredoc" string
-expression form and then formatting the template over multiple lines for
+literal form and then formatting the template over multiple lines for
 readability. Quoted string literals should usually include only interpolation
 sequences.
