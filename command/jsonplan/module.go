@@ -12,8 +12,3 @@ type module struct {
 	// recursively describing the full module tree.
 	ChildModules []module `json:"child_modules,omitempty"`
 }
-
-// merge
-func (m *module) merge(new module) error {
-	return nil
-}

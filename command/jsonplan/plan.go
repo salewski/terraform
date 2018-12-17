@@ -81,8 +81,7 @@ func Marshal(
 
 	output := newPlan()
 
-	// TODO: output.PlannedValues
-	err := output.marshalPlannedValues(p.Changes, s, schemas)
+	err := output.marshalPlannedValues(p.Changes, schemas)
 	if err != nil {
 		return nil, fmt.Errorf("error in marshalPlannedValues: %s", err)
 	}
@@ -234,38 +233,24 @@ func (p *plan) marshalOutputChanges(changes *plans.Changes) error {
 	return nil
 }
 
-// marshalPlannedValues takes the current state, planned changes, and schemas
-// and populates the PlannedValues. Any unknown values will be omitted.
-func (p *plan) marshalPlannedValues(
-	changes *plans.Changes,
-	s *states.State,
-	schemas *terraform.Schemas,
-) error {
-	// marshal the current state into a module
-	curr, err := marshalState(s, schemas)
-	if err != nil {
-		return err
-	}
-
+func (p *plan) marshalPlannedValues(changes *plans.Changes, schemas *terraform.Schemas) error {
 	// marshal the planned changes into a module
-	plan, err := marshalPlan(changes, schemas)
-	if err != nil {
-		return err
-	}
-
-	// TODO: smoosh them together
-	err = plan.merge(curr)
+	plan, err := marshalPlannedValues(changes, schemas)
 	if err != nil {
 		return err
 	}
 
 	// marshalPlannedOutputs
-	outputs, err := marshalPlannedOutputs(changes, s)
+	outputs, err := marshalPlannedOutputs(changes)
 	if err != nil {
 		return err
 	}
 	p.PlannedValues.Outputs = outputs
 	p.PlannedValues.RootModule = plan
 
+	return nil
+}
+
+func (p *plan) marshalProposedUnknowns(changes *plans.Changes, schemas *terraform.Schemas) error {
 	return nil
 }
