@@ -233,3 +233,39 @@ func (p *plan) marshalOutputChanges(changes *plans.Changes) error {
 
 	return nil
 }
+
+// marshalPlannedValues takes the current state, planned changes, and schemas
+// and populates the PlannedValues. Any unknown values will be omitted.
+func (p *plan) marshalPlannedValues(
+	changes *plans.Changes,
+	s *states.State,
+	schemas *terraform.Schemas,
+) error {
+	// marshal the current state into a module
+	curr, err := marshalState(s, schemas)
+	if err != nil {
+		return err
+	}
+
+	// marshal the planned changes into a module
+	plan, err := marshalPlan(changes, schemas)
+	if err != nil {
+		return err
+	}
+
+	// TODO: smoosh them together
+	err = plan.merge(curr)
+	if err != nil {
+		return err
+	}
+
+	// marshalPlannedOutputs
+	outputs, err := marshalPlannedOutputs(changes, s)
+	if err != nil {
+		return err
+	}
+	p.PlannedValues.Outputs = outputs
+	p.PlannedValues.RootModule = plan
+
+	return nil
+}

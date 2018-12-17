@@ -21,38 +21,6 @@ type stateValues struct {
 	RootModule module            `json:"root_module,omitempty"`
 }
 
-// marshalPlannedValues takes the current state, planned changes, and schemas
-// and populates the PlannedValues. Any unknown values will be omitted.
-func (p *plan) marshalPlannedValues(
-	changes *plans.Changes,
-	s *states.State,
-	schemas *terraform.Schemas,
-) error {
-	// marshal the current state into a stateValues
-	_, err := marshalState(s, schemas)
-	if err != nil {
-		return err
-	}
-
-	// marshal the planned changes into a statesValues
-	planned, err := marshalPlan(changes, schemas)
-	if err != nil {
-		return err
-	}
-
-	// TODO: smoosh them together
-
-	// marshalPlannedOutputs
-	outputs, err := marshalPlannedOutputs(changes, s)
-	if err != nil {
-		return err
-	}
-	p.PlannedValues.Outputs = outputs
-	p.PlannedValues.RootModule = planned
-
-	return nil
-}
-
 // attributeValues is the JSON representation of the attribute values of the
 // resource, whose structure depends on the resource type schema.
 type attributeValues map[string]interface{}
@@ -292,6 +260,10 @@ func marshalPlanResources(changes *plans.Changes, ris []addrs.AbsResourceInstanc
 
 	for _, ri := range ris {
 		r := changes.ResourceInstance(ri)
+		if r.Action == plans.Delete || r.Action == plans.NoOp {
+			continue
+		}
+
 		resource := resource{
 			Address:      r.Addr.String(),
 			Type:         r.Addr.Resource.Resource.Type,
@@ -327,7 +299,7 @@ func marshalPlanResources(changes *plans.Changes, ris []addrs.AbsResourceInstanc
 		}
 
 		// TODO:
-		// What does this do if the values are unknown?
+		// What should this do if the values are unknown?
 		// How about deletions?
 		if changeV.After != cty.NilVal {
 			if changeV.After.IsWhollyKnown() {
