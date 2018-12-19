@@ -59,7 +59,8 @@ automatically.
 
 * Top-level blocks should always be separated from one another by one
   blank line. Nested blocks should also be separated by blank lines, except
-  when grouping together related blocks of the same type.
+  when grouping together related blocks of the same type (like multiple
+  `provisioner` blocks in a resource).
 
 * Avoid separating multiple blocks of the same type with other blocks of
   a different type, unless the block types are defined by semantics to

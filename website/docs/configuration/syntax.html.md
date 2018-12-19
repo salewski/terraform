@@ -33,7 +33,7 @@ syntax in
 ## Arguments and Blocks
 
 The Terraform language syntax is built around two key syntax constructs:
-Arguments and blocks.
+arguments and blocks.
 
 ### Arguments
 
@@ -78,26 +78,36 @@ resource "aws_instance" "example" {
 
 A block has a _type_ (`resource` in this example). Each block type defines
 how many _labels_ must follow the type keyword. The `resource` block type
-shown here expects two labels, which are `aws_instance` and `example`
-in this case. A particular block type may have any number of required labels,
-or it may require none as with the nested `network_interface` block type.
+expects two labels, which are `aws_instance` and `example` in the example above.
+A particular block type may have any number of required labels, or it may
+require none as with the nested `network_interface` block type.
 
 After the block type keyword and any labels, the block _body_ is delimited
 by the `{` and `}` characters. Within the block body, further arguments
 and blocks may be nested, creating a heirarchy of blocks and their associated
 arguments.
 
+The Terraform language uses a limited number of _top-level block types,_ which
+are blocks that can appear outside of any other block in a configuration file.
+Most of Terraform's features (including resources, input variables, output
+values, data sources, etc.) are implemented as top-level blocks.
+
 ## Identifiers
 
 Argument names, block type names, and the names of most Terraform-specific
 constructs like resources, input variables, etc. are all _identifiers_.
-The Terraform language implements
-[the Unicode identifier syntax](http://unicode.org/reports/tr31/), extended
-to also include the ASCII hyphen character `-`.
 
-In practice, this means that identifiers can contain letters, digits,
-underscores (`_`), and hyphens (`-`). To avoid ambiguity with literal numbers,
-the first character of an identifier must not be a digit.
+### Short Rules for Identifiers
+
+Identifiers can contain letters, digits, underscores (`_`), and hyphens (`-`).
+The first character of an identifier must not be a digit, to avoid ambiguity
+with literal numbers.
+
+### Complete Rules for Identifiers
+
+Terraform implements
+[the Unicode identifier syntax](http://unicode.org/reports/tr31/), extended to
+include the ASCII hyphen character `-`.
 
 ## Comments
 

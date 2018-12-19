@@ -29,6 +29,19 @@ A _Terraform configuration_ consists of a _root module_, where evaluation
 begins, along with a tree of child modules created when one module calls
 another.
 
+## Arguments, Blocks, and Expressions
+
+```hcl
+resource "aws_vpc" "main" {
+  cidr_block = var.base_cidr_block
+}
+
+<BLOCK TYPE> "<BLOCK LABEL>" "<BLOCK LABEL>" {
+  # Block body
+  <IDENTIFIER> = <EXPRESSION> # Argument
+}
+```
+
 ## Code Organization
 
 The Terraform language uses configuration files that are named with the `.tf`
