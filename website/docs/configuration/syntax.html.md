@@ -87,67 +87,6 @@ by the `{` and `}` characters. Within the block body, further arguments
 and blocks may be nested, creating a heirarchy of blocks and their associated
 arguments.
 
-### Style Conventions
-
-The Terraform parser allows you some flexibility in how you lay out the
-elements in your configuration files, but the Terraform language also has some
-idiomatic style conventions which we recommend users should always follow
-for consistency between files and modules written by different teams.
-Automatic source code formatting tools may apply these conventions
-automatically.
-
-* Indent two spaces for each nesting level.
-
-* When multiple attributes with single-line values appear on consecutive lines
-  at the same nesting level, align their equals signs:
-
-  ```hcl
-  ami           = "abc123"
-  instance_type = "t2.micro"
-  ```
-
-* When both attributes and blocks appear together inside a block body,
-  place all of the attributes together at the top and then place nested
-  blocks below them. Use one blank line to separate the attributes from
-  the blocks.
-
-* Use empty lines to separate logical groups of attributes within a block.
-
-* For blocks that contain both arguments and "meta-arguments" (as defined by
-  the Terraform language semantics), list meta-argument attributes first
-  and separate them from other attributes with one blank line. Place
-  meta-argument blocks _last_ and separate them from other blocks with
-  one blank line.
-
-  ```hcl
-  resource "aws_instance" "example" {
-    count = 2 # meta-argument attribute first
-
-    ami           = "abc123"
-    instance_type = "t2.micro"
-
-    network_interface {
-      # ...
-    }
-
-    lifecycle { # meta-argument block last
-      create_before_destroy = true
-    }
-  }
-  ```
-
-* Top-level blocks should always be separated from one another by one
-  blank line. Nested blocks should also be separated by blank lines, except
-  when grouping together related blocks of the same type.
-
-* Avoid separating multiple blocks of the same type with other blocks of
-  a different type, unless the block types are defined by semantics to
-  form a family.
-  (For example: `root_block_device`, `ebs_block_device` and
-  `ephemeral_block_device` on `aws_instance` form a family of block types
-  describing AWS block devices, and can therefore be grouped together and
-  mixed.)
-
 ## Identifiers
 
 Argument names, block type names, and the names of most Terraform-specific
