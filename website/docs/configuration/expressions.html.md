@@ -135,82 +135,85 @@ types described above:
 
 ## Indices and Attributes
 
-Elements of list-, tuple-, map-, and object-typed values can be accessed using
+[inpage-index]: #indices-and-attributes
+
+Elements of list/tuple and map/object values can be accessed using
 the square-bracket index notation, like `local.list[3]`. The expression within
 the brackets must be a whole number for list and tuple values or a string
 for map and object values.
 
-Object attributes with names that are valid identifiers can also be accessed
-using the dot-separated attribute notation, like `local.object.attrname`. This
-syntax is also allowed for accessing map elements with keys that are valid
-identifiers, but we recommend using the square-bracket index notation
-(`local.map["keyname"]`) when a map contains arbitrary user-specified keys, as
-opposed to an object with a fixed set of attributes defined by a schema.
+Map/object attributes with names that are valid identifiers can also be accessed
+using the dot-separated attribute notation, like `local.object.attrname`.
+In cases where a map might contain arbitrary user-specified keys, we recommend
+using only the square-bracket index notation (`local.map["keyname"]`).
 
-## References to Named Objects
+## References to Named Values
 
-A number of different named objects can be accessed from Terraform expressions.
-For example, resources are available in expressions as named objects that have
-an object value corresponding to the schema of their resource type, accessed by
-a dot-separated sequence of names like `aws_instance.example`.
+Terraform makes several kinds of named values available. Each of these names is
+an expression that references the associated value; you can use them as
+standalone expressions, or combine them with other expressions to compute new
+values.
 
-The following named objects are available:
+The following named values are available:
 
-* `RESOURCE_TYPE.NAME` is an object representing a
+* `<RESOURCE TYPE>.<NAME>` is an object representing a
   [managed resource](/docs/configuration/resources.html) of the given type
-  and name. If the resource has the `count` argument set, the value is
-  a list of objects representing its instances. Any named object that does
-  not match one of the other patterns listed below will be interpreted by
-  Terraform as a reference to a managed resource.
+  and name. The attributes of the resource can be accessed using
+  [dot or square bracket notation][inpage-index].
 
-* `var.NAME` is the value of the
+    Any named value that does not match another pattern listed below
+    will be interpreted by Terraform as a reference to a managed resource.
+
+    If the resource has the `count` argument set, the value of this expression
+    is a _list_ of objects representing its instances.
+* `var.<NAME>` is the value of the
   [input variable](/docs/configuration/variables.html) of the given name.
-
-* `local.NAME` is the value of the
+* `local.<NAME>` is the value of the
   [local value](/docs/configuration/locals.html) of the given name.
-
-* `module.MOD_NAME.OUTPUT_NAME` is the value of the specified
+* `module.<MODULE NAME>.<OUTPUT NAME>` is the value of the specified
   [output value](/docs/configuration/outputs.html) from a
   [child module](/docs/configuration/modules.html) called by the current module.
-
-* `data.SOURCE.NAME` is an object representing a
+* `data.<DATA TYPE>.<NAME>` is an object representing a
   [data resource](/docs/configuration/data-sources.html) of the given data
-  source and name. If the resource has the `count` argument set, the value is
-  a list of objects representing its instances.
-
-* `path.` is the prefix of a set of named objects that are filesystem
-  paths of various kinds:
-
-  * `path.module` is the filesystem path of the module where the expression
-    is placed.
-
-  * `path.root` is the filesystem path of the root module of the configuration.
-
-  * `path.cwd` is the filesystem path of the current working directory. In
-    normal use of Terraform this is the same as `path.root`, but some advanced
-    uses of Terraform run it from a directory other than the root module
-    directory, causing these paths to be different.
-
+  source type and name. If the resource has the `count` argument set, the value
+  is a list of objects representing its instances.
+* `path.module` is the filesystem path of the module where the expression
+  is placed.
+* `path.root` is the filesystem path of the root module of the configuration.
+* `path.cwd` is the filesystem path of the current working directory. In
+  normal use of Terraform this is the same as `path.root`, but some advanced
+  uses of Terraform run it from a directory other than the root module
+  directory, causing these paths to be different.
 * `terraform.workspace` is the name of the currently selected
   [workspace](/docs/state/workspaces.html).
 
-Constructs like resources and module calls often use expressions in their block
-bodies, and Terraform analyzes these expressions to automatically infer
-dependencies between objects. For example, an expression in a resource argument
-that refers to another managed resource creates an implicit dependency between
-the two resources.
+Although many of these names use dot-separated paths that resemble
+[attribute notation][inpage-index] for elements of object values, they are not
+implemented as real objects. This means you must use them exactly as written:
+you cannot use square-bracket notation to replace the dot-separated paths, and
+you cannot iterate over the "parent object" of a named entity (for example, you
+cannot use `aws_instance` in a `for` expression).
 
-The first name in each of these dot-separated sequences is called a
-_variable_, but do not confuse this with the idea of an
-[input variable](/docs/configuration/variables.html), which acts as a
-customization parameter for a module. Input variables are often referred
-to as just "variables" for brevity when the meaning is clear from context,
-but due to this other meaning of "variable" in the context of expressions
-this documentation page will always refer to input variables by their full
-name.
+### Named Values and Dependencies
 
-Additional expression variables are available in specific contexts. These are
-described in other documentation sections describing those specific features.
+Constructs like resources and module calls often use references to named values
+in their block bodies, and Terraform analyzes these expressions to automatically
+infer dependencies between objects. For example, an expression in a resource
+argument that refers to another managed resource creates an implicit dependency
+between the two resources.
+
+### Local Named Values
+
+Within the bodies of certain expressions, or in some other specific contexts,
+there are other named values available beyond the global values listed above.
+(For example, the body of a resource block where `count` is set can use a
+special `count.index` value.) These local names are described in the
+documentation for the specific contexts where they appear.
+
+-> **Note:** Local named values are often referred to as _variables_ or
+_temporary variables_ in their documentation. These are not [input
+variables](/docs/configuration/variables.html); they are just arbitrary names
+that temporarily represent a value.
 
 ### Values Not Yet Known
 
@@ -270,16 +273,15 @@ which are similar to operators in programming languages such as JavaScript
 or Ruby.
 
 When multiple operators are used together in an expression, they are evaluated
-according to a default order of operations:
+in the following order of operations:
 
-| Level | Operators            |
-| ----- | -------------------- |
-| 6     | `*`, `/`, `%`        |
-| 5     | `+`, `-`             |
-| 4     | `>`, `>=`, `<`, `<=` |
-| 3     | `==`, `!=`           |
-| 2     | `&&`                 |
-| 1     | <code>&#124;&#124;</code> |
+1. `!`, `-` (multiplication by `-1`)
+1. `*`, `/`, `%`
+1. `+`, `-` (subtraction)
+1. `>`, `>=`, `<`, `<=`
+1. `==`, `!=`
+1. `&&`
+1. `||`
 
 Parentheses can be used to override the default order of operations. Without
 parentheses, higher levels are evaluated first, so `1 + 2 * 3` is interpreted
@@ -369,13 +371,12 @@ within expressions as another way to transform and combine values. These
 are similar to the operators but all follow a common syntax:
 
 ```hcl
-function_name(argument1, argument2)
+<FUNCTION NAME>(<ARGUMENT 1>, <ARGUMENT 2>)
 ```
 
-The `function_name` specifies which function to call. Each defined function has
-a _signature_, which defines how many arguments it expects and what value types
-those arguments must have. The signature also defines the type of the result
-value for any given set of argument types.
+The function name specifies which function to call. Each defined function
+expects a specific number of arguments with specific value types, and returns a
+specific value type as a result.
 
 Some functions take an arbitrary number of arguments. For example, the `min`
 function takes any amount of number arguments and returns the one that is
@@ -405,8 +406,8 @@ For a full list of available functions, see
 
 ## `for` Expressions
 
-A _`for` expression_ creates a structural type value by transforming
-another structural or collection type value. Each element in the input value
+A _`for` expression_ creates a complex type value by transforming
+another complex type value. Each element in the input value
 can correspond to either one or zero values in the result, and an arbitrary
 expression can be used to transform each input element into an output element.
 
@@ -466,13 +467,13 @@ operation that could otherwise be performed with a `for` expression.
 If `var.list` is a list of objects that all have an attribute `id`, then
 a list of the ids could be produced with the following `for` expression:
 
-```
+```hcl
 [for o in var.list: o.id]
 ```
 
 This is equivalent to the following _splat expression:_
 
-```
+```hcl
 var.list[*].id
 ```
 
@@ -482,38 +483,15 @@ right. A splat expression can also be used to access attributes and indexes
 from lists of complex types by extending the sequence of operations to the
 right of the symbol:
 
-```
+```hcl
 var.list[*].interfaces[0].name
 ```
 
 The above expression is equivalent to the following `for` expression:
 
-```
+```hcl
 [for o in var.list: o.interfaces[0].name]
 ```
-
-A second variant of the _splat expression_ is the "attribute-only" splat
-expression, indicated by the sequence `.*`:
-
-```
-var.list.*.interfaces[0].name
-```
-
-This form has a subtly different behavior, equivalent to the following
-`for` expression:
-
-```
-[for o in var.list: o.interfaces][0].name
-```
-
-Notice that with the attribute-only splat expression the index operation
-`[0]` is applied to the result of the iteration, rather than as part of
-the iteration itself.
-
-The standard splat expression `[*]` should be used in most cases, because its
-behavior is less surprising. The attribute-only splat expression is supported
-only for compatibility with earlier versions of Terraform, and should not be
-used in new configurations.
 
 Splat expressions also have another useful effect: if they are applied to
 a value that is _not_ a list or tuple then the value is automatically wrapped
@@ -532,12 +510,36 @@ The above will produce a list of ids whether `aws_instance.example` has
 in the configuration when a particular resource switches to and from
 having `count` set.
 
+### Legacy (Attribute-only) Splat Expressions
+
+An older variant of the splat expression is available for compatibility with
+code written in older versions of the Terraform language. This is a less useful
+version of the splat expression, and should be avoided in new configurations.
+
+An "attribute-only" splat expression is indicated by the sequence `.*` (instead
+of `[*]`):
+
+```
+var.list.*.interfaces[0].name
+```
+
+This form has a subtly different behavior, equivalent to the following
+`for` expression:
+
+```
+[for o in var.list: o.interfaces][0].name
+```
+
+Notice that with the attribute-only splat expression the index operation
+`[0]` is applied to the result of the iteration, rather than as part of
+the iteration itself.
+
 ## `dynamic` blocks
 
-Expressions can usually be used only when assigning a value to an attribute
-argument using the `name = expression` form. This covers many uses, but
-some resource types include in their arguments _nested blocks_, which
-do not accept expressions:
+Within top-level block constructs like resources, expressions can usually be
+used only when assigning a value to an argument using the `name = expression`
+form. This covers many uses, but some resource types include repeatable _nested
+blocks_ in their arguments, which do not accept expressions:
 
 ```hcl
 resource "aws_security_group" "example" {
@@ -549,9 +551,9 @@ resource "aws_security_group" "example" {
 }
 ```
 
-To allow nested blocks like `ingress` to be constructed dynamically, a special
-block type `dynamic` is supported inside `resource`, `data`, `provider`,
-and `provisioner` blocks:
+You can dynamically construct repeatable nested blocks like `ingress` using a
+special `dynamic` block type, which is supported inside `resource`, `data`,
+`provider`, and `provisioner` blocks:
 
 ```hcl
 resource "aws_security_group" "example" {
@@ -568,28 +570,39 @@ resource "aws_security_group" "example" {
 }
 ```
 
-A `dynamic` block iterates over a collection or structural value given in its
-`for_each` argument, generating a nested block for each element by evaluating
-the nested `content` block. When evaluating the block, a temporary variable
-is defined that is by default named after the block type being generated,
-or `ingress` in this example. An optional additional argument `iterator` can be
-used to override the name of the iterator variable.
+A `dynamic` block acts much like a `for` expression, but produces nested blocks
+instead of a complex typed value. It iterates over a given complex value, and
+generates a nested block for each element of that complex value.
+
+- The label of the dynamic block (`"ingress"` in the example above) specifies
+  what kind of nested block to generate.
+- The `for_each` argument provides the complex value to iterate over.
+- The `iterator` argument (optional) sets the name of a temporary variable
+  that represents the current element of the complex value. If omitted, the name
+  of the variable defaults to the label of the `dynamic` block (`"ingress"` in
+  the example above).
+- The `labels` argument (optional) is a list of strings that specifies the block
+  labels, in order, to use for each generated block. You can use the temporary
+  iterator variable in this value.
+- The nested `content` block defines the body of each generated block. You can
+  use the temporary iterator variable inside this block.
 
 Since the `for_each` argument accepts any collection or structural value,
 you can use a `for` expression or splat expression to transform an existing
 collection.
-
-Overuse of `dynamic` blocks can make configuration hard to read and maintain,
-so we recommend using this only when a re-usable module is hiding some details.
-Avoid creating modules that are just thin wrappers around single resources,
-passing through all of the input variables directly to resource arguments.
-Always write nested blocks out literally where possible.
 
 A `dynamic` block can only generate arguments that belong to the resource type,
 data source, provider or provisioner being configured. It is _not_ possible
 to generate meta-argument blocks such as `lifecycle` and `provisioner`
 blocks, since Terraform must process these before it is safe to evaluate
 expressions.
+
+### Best Practices for `dynamic` Blocks
+
+Overuse of `dynamic` blocks can make configuration hard to read and maintain, so
+we recommend using them only when you need to hide details in order to build a
+clean user interface for a re-usable module. Always write nested blocks out
+literally where possible.
 
 ## String Literals
 
@@ -665,7 +678,7 @@ Backslash sequences are not interpreted in a heredoc string expression.
 Instead, the backslash character is interpreted literally.
 
 In both quoted and heredoc string expressions, Terraform supports template
-sequences introduced by `${` and `%{`. These are described in more detail
+sequences that begin with `${` and `%{`. These are described in more detail
 in the following section. To include these sequences _literally_ without
 beginning a template sequence, double the leading character: `$${` or `%%{`.
 
@@ -721,12 +734,13 @@ The following directives are supported:
     The name given immediately after the `for` keyword is used as a temporary
     variable name which can then be referenced from the nested template.
 
-To allow for template directives to be formatted for readability without
-introducing unwanted additional spaces and newlines in the result, all
-template sequences can include optional _strip markers_ (`~`) either immediately
-after the introducer or immediately before the end. When present, the sequence
-consumes all of the literal whitespace (spaces and newlines) either before
-or after the sequence:
+To allow template directives to be formatted for readability without adding
+unwanted spaces and newlines to the result, all template sequences can include
+optional _strip markers_ (`~`), immediately after the opening characters or
+immediately before the end. When a strip marker is present, the template
+sequence consumes all of the literal whitespace (spaces and newlines) either
+before the sequence (if the marker appears at the beginning) or after (if the
+marker appears at the end):
 
 ```hcl
 <<EOT

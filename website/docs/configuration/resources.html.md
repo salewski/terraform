@@ -46,19 +46,37 @@ arguments defined specifically for [the `aws_instance` resource type](/docs/prov
 
 Each resource is associated with a single _resource type_, which determines
 the kind of infrastructure object it manages and what arguments and other
-attributes are supported for each resource.
+attributes the resource supports.
 
 Each resource type in turn belongs to a [provider](/docs/configuration/providers.html),
-which is a plugin for Terraform that offers a collection of resource types that
-most often belong to a single cloud or on-premises infrastructure platform.
+which is a plugin for Terraform that offers a collection of resource types. A
+provider usually provides resources to manage a single cloud or on-premises
+infrastructure platform.
 
-Most of the items within the body of a `resource` block are defined by and
-specific to the selected resource type, and these arguments can make full
-use of [expressions](/docs/configuration/expressions.html) and other dynamic
-Terraform language features.
+Most of the items within the body of a `resource` block are specific to the
+selected resource type. These arguments can make full use of
+[expressions](/docs/configuration/expressions.html) and other dynamic Terraform
+language features.
 
-There are also some "meta-arguments" that are defined by Terraform itself
+There are also some _meta-arguments_ that are defined by Terraform itself
 and apply across all resource types. (See [Meta-Arguments](#meta-arguments) below.)
+
+### Documentation for Resource Types
+
+[Terraform's provider documentation][providers] is the primary place to
+learn which resource types are available and which arguments to use for each
+resource type. Once you understand Terraform's basic syntax, the provider
+documentation will be where you spend the majority of your time on this website.
+
+The "[Providers][]" link at the top level of the navigation sidebar will take
+you to an alphabetical list of all of the providers distributed by HashiCorp.
+You can find a specific provider in this master list, or choose a category from
+the navigation sidebar to browse a more focused list of providers.
+
+You can also search GitHub or other sources for third-party providers, which can
+be installed as plugins to enable an even broader selection of resource types.
+
+[providers]: /docs/providers/index.html
 
 ## Resource Behavior
 
@@ -84,7 +102,7 @@ details of what it means to create, update, or destroy a resource are different
 for each resource type, but this standard set of verbs is common across them
 all.
 
-The "meta-arguments" within `resource` blocks, documented in the
+The meta-arguments within `resource` blocks, documented in the
 sections below, allow some details of this standard resource behavior to be
 customized on a per-resource basis.
 
@@ -219,22 +237,19 @@ resource "aws_instance" "server" {
 
 When the `count` meta-argument is present, a distinction exists between
 the resource block itself — identified as `aws_instance.server` —
-and the multiple _resource instances_ associated with it, identified
-as `aws_instance.server[0]`, `aws_instance.server[1]`, etc. When `count`
-is _not_ present, a resource block has only a single resource instance,
-which has no associated index.
+and the multiple _resource instances_ associated with it, identified as
+`aws_instance.server[0]`, `aws_instance.server[1]`, etc. Each instance has a
+distinct infrastructure object associated with it (as described above in
+[Resource Behavior](#resource-behavior)), and each is separtely created,
+updated, or destroyed when the configuration is applied.
+
+When `count` is _not_ present, a resource block has only a single resource
+instance, which has no associated index.
 
 Within resource blocks where `count` is set, an additional `count` object is
 available for use in expressions so you can modify the configuration of each
 instance. This object has one attribute, `count.index`, which provides the
 distinct index number (starting with `0`) for each instance.
-
-The [Resource Behavior](#resource-behavior) section above described how each resource corresponds
-to a real infrastructure object. It is in fact resource _instances_ that
-correspond to infrastructure objects, and so when `count` is used a particular
-resource block has a distinct infrastructure object associated with each of its
-instances, and each is separtely created, updated, or destroyed when the
-configuration is applied.
 
 The `count` meta-argument accepts [expressions](/docs/configuration/expressions.html)
 in its value, similar to the resource-type-specific arguments for a resource.
@@ -384,7 +399,7 @@ meta-arguments are supported:
     with it, and so Terraform will allow the destroy operation to succeed.
 
 * `ignore_changes` (list of attribute names) - By default, Terraform detects
-  any difference between the current settings of a real infrastructure object
+  any difference in the current settings of a real infrastructure object
   and plans to update the remote object to match configuration.
 
     In some rare cases, settings of a remote object are modified by processes

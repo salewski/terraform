@@ -31,6 +31,8 @@ another.
 
 ## Arguments, Blocks, and Expressions
 
+The syntax of the Terraform language consists of only a few basic elements:
+
 ```hcl
 resource "aws_vpc" "main" {
   cidr_block = var.base_cidr_block
@@ -41,6 +43,20 @@ resource "aws_vpc" "main" {
   <IDENTIFIER> = <EXPRESSION> # Argument
 }
 ```
+
+- _Blocks_ are containers for other content and usually represent the
+  configuration of some kind of object, like a resource. Blocks have a
+  _block type,_ can have zero or more _labels,_ and have a _body_ that contains
+  any number of arguments and nested blocks. Most of Terraform's features are
+  controlled by top-level blocks in a configuration file.
+- _Arguments_ assign a value to a name. They almost always occur within blocks.
+- _Expressions_ represent a value, either literally or by referencing and
+  combining other values.
+
+For full details about Terraform's syntax, see:
+
+- [Configuration Syntax](./syntax.html)
+- [Expressions](./expressions.html)
 
 ## Code Organization
 

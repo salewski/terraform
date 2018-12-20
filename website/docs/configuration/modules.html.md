@@ -80,6 +80,9 @@ resource "aws_elb" "example" {
 }
 ```
 
+For more information about referring to named values, see
+[Expressions](./expressions.html).
+
 ## Other Meta-arguments
 
 Along with the `source` meta-argument described above, module blocks have

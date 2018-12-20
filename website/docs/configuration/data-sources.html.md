@@ -167,8 +167,8 @@ data "aws_ami" "web" {
 
 ## Description
 
-The `data` block creates a data instance of the given `TYPE` (first
-parameter) and `NAME` (second parameter). The combination of the type
+The `data` block creates a data instance of the given _type_ (first
+block label) and _name_ (second block label). The combination of the type
 and name must be unique.
 
 Within the block (the `{ }`) is configuration for the data instance. The
@@ -176,24 +176,27 @@ configuration is dependent on the type, and is documented for each
 data source in the [providers section](/docs/providers/index.html).
 
 Each data instance will export one or more attributes, which can be
-interpolated into other resources using variables of the form
-`data.TYPE.NAME.ATTR`. For example:
+used in other resources as reference expressions of the form
+`data.<TYPE>.<NAME>.<ATTRIBUTE>`. For example:
 
 ```hcl
 resource "aws_instance" "web" {
-  ami           = "${data.aws_ami.web.id}"
+  ami           = data.aws_ami.web.id
   instance_type = "t1.micro"
 }
 ```
 
-### Meta-parameters
+## Meta-Arguments
 
-As data sources are essentially a read only subset of resources they also support the same [meta-parameters](https://www.terraform.io/docs/configuration/resources.html#meta-parameters) of resources except for the [`lifecycle` configuration block](https://www.terraform.io/docs/configuration/resources.html#lifecycle).
+As data sources are essentially a read only subset of resources, they also
+support the same [meta-arguments](./resources.html#meta-arguments) of resources
+with the exception of the
+[`lifecycle` configuration block](./resources.html#lifecycle-lifecycle-customizations).
 
-## Multiple Provider Instances
+### Multiple Provider Instances
 
-Similarly to [resources](/docs/configuration/resources.html), the
-`provider` meta-parameter can be used where a configuration has
+Similarly to [resources](./resources.html), the
+`provider` meta-argument can be used where a configuration has
 multiple aliased instances of the same provider:
 
 ```hcl
@@ -204,10 +207,10 @@ data "aws_ami" "web" {
 }
 ```
 
-See the ["Multiple Provider Instances"](/docs/configuration/resources.html#multiple-provider-instances) documentation for resources
+See [Resources: Multiple Provider Instances](./resources.html#provider-selecting-a-non-default-provider-configuration)
 for more information.
 
-## Data Source Lifecycle
+### Data Source Lifecycle
 
 If the arguments of a data instance contain no references to computed values,
 such as attributes of resources that have not yet been created, then the
