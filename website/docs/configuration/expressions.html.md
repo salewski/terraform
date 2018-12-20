@@ -34,115 +34,118 @@ The result of an expression is a _value_. All values have a _type_, which
 dictates where that value can be used and what transformations can be
 applied to it.
 
-A _literal expression_ is an expression that directly represents a particular
-constant value.
+The Terraform language uses the following types for its values:
 
-Expressions are most commonly used to set the values of arguments to resources
-and to child modules. In these cases, the argument itself has an expected
-type and so the given expression must produce a value of that type. Where
-possible, Terraform will automatically convert values from one type to another
-in order to produce the expected type. If this isn't possible, Terraform will
-produce a type mismatch error and you must update the configuration with
-a more suitable expression.
-
-This section describes all of the value types in the Terraform language, and
-the literal expression syntax that can be used to create values of each
-type.
-
-### Primitive Types
-
-A _primitive_ type is a simple type that isn't made from any other types.
-The available primitive types in the Terraform language are:
-
-* `string`: a sequence of Unicode characters representing some text, such
-  as `"hello"`.
-
+* `string`: a sequence of Unicode characters representing some text, like
+  `"hello"`.
 * `number`: a numeric value. The `number` type can represent both whole
-  numbers like `15` and fractional values such as `6.283185`.
-
+  numbers like `15` and fractional values like `6.283185`.
 * `bool`: either `true` or `false`. `bool` values can be used in conditional
   logic.
+* `list` (or `tuple`): a sequence of values, like
+  `["us-west-1a", "us-west-1c"]`. Elements in a list or tuple are identified by
+  consecutive whole numbers, starting with zero.
+* `map` (or `object`): a group of values identified by named labels, like
+  `{name = "Mabel", age = 52}`.
 
-The Terraform language will automatically convert `number` and `bool` values
-to `string` values when needed, and vice-versa as long as the string contains
-a valid representation of a number of boolean value.
+Strings, numbers, and bools are sometimes called _primitive types._ Lists/tuples and maps/objects are sometimes called _complex types,_ _structural types,_ or _collection types._
+
+Finally, there is one special value that has _no_ type:
+
+* `null`: a value that represents _absence_ or _omission._ If you set an
+  argument of a resource or module to `null`, Terraform behaves as though you
+  had completely omitted it — it will use the argument's default value if it has
+  one, or raise an error if the argument is mandatory. `null` is most useful in
+  conditional expressions, so you can dynamically omit an argument if a
+  condition isn't met.
+
+### Advanced Type Details
+
+In most situations, lists and tuples behave identically, as do maps and objects.
+Whenever the distinction isn't relevant, the Terraform documentation uses each
+pair of terms interchangeably (with a historical preference for "list" and
+"map").
+
+However, module authors and provider developers should understand the
+differences between these similar types (and the related `set` type), since they
+offer different ways to restrict the allowed values for input variables and
+resource arguments.
+
+For complete details about these types (and an explanation of why the difference
+usually doesn't matter), see [Type Constraints](./types.html).
+
+### Type Conversion
+
+Expressions are most often used to set values for the arguments of resources and
+child modules. In these cases, the argument has an expected type and the given
+expression must produce a value of that type.
+
+Where possible, Terraform automatically converts values from one type to
+another in order to produce the expected type. If this isn't possible, Terraform
+will produce a type mismatch error and you must update the configuration with a
+more suitable expression.
+
+Terraform automatically converts number and bool values to strings when needed.
+It also converts strings to numbers or bools, as long as the string contains a
+valid representation of a number or bool value.
 
 * `true` converts to `"true"`, and vice-versa
 * `false` converts to `"false"`, and vice-versa
 * `15` converts to `"15"`, and vice-versa
 
-### Collection Types
+## Literal Expressions
 
-A _collection_ type allows multiple values of another type to be grouped
-together as a single value. The type of value _within_ a collection is called
-its _element type_, and all collection types must have an element type.
+A _literal expression_ is an expression that directly represents a particular
+constant value. Terraform has a literal expression syntax for each of the value
+types described above:
 
-For example, the type `list(string)` means "list of strings", which is a
-different type than `list(number)`, a list of numbers. All elements of a
-collection must always be of the same type.
+* Strings are usually represented by a double-quoted sequence of Unicode
+  characters, `"like this"`. There is also a "heredoc" syntax for more complex
+  strings. String literals are the most complex kind of literal expression in
+  Terraform, and have additional documentation on this page:
+    * See [String Literals](#string-literals) below for information about escape
+      sequences and the heredoc syntax.
+    * See [String Templates](#string-templates) below for information about
+      interpolation and template directives.
+* Numbers are represented by unquoted sequences of digits with or without a
+  decimal point, like `15` or `6.283185`.
+* Bools are represented by the unquoted symbols `true` and `false`.
+* The null value is represented by the unquoted symbol `null`.
+* Lists/tuples are represented by a pair of square brackets containing a
+  comma-separated sequence of values, like `["a", 15, true]`.
 
-The three kinds of collection type in the Terraform language are:
+    List literals can be split into multiple lines for readability, but always
+    require a comma between values. A comma after the final value is allowed,
+    but not required. Values in a list can be arbitrary expressions.
+* Maps/objects are represented by a pair of curly braces containing a series of
+  `<KEY> = <VALUE>` pairs:
 
-* `list(...)`: a sequence of values identified by consecutive whole numbers
-  starting with zero.
-* `map(...)`: a collection of values where each is identified by a string label.
-* `set(...)`: a collection of unique values that do not have any secondary
-  identifiers or ordering.
+    ```hcl
+    {
+      name = "John"
+      age  = 52
+    }
+    ```
 
-There is no direct syntax for creating collection type values, but the
-Terraform language can automatically convert a structural type value (as
-defined in the next section) to a similar collection type as long as all
-of its elements can be converted to the required element type.
+    Key/value pairs can be separated by either a comma or a line break. Values
+    can be arbitrary expressions. Keys are strings; they can be left unquoted if
+    they are a valid [identifier](./syntax.html#identifiers), but must be quoted
+    otherwise. You can use a non-literal expression as a key by wrapping it in
+    parentheses, like `(var.business_unit_tag_name) = "SRE"`.
 
-### Structural Types
+## Indices and Attributes
 
-A _structural_ type is another way to combine multiple values into a single
-value, but structural types allow each value to be of a distinct type.
+Elements of list-, tuple-, map-, and object-typed values can be accessed using
+the square-bracket index notation, like `local.list[3]`. The expression within
+the brackets must be a whole number for list and tuple values or a string
+for map and object values.
 
-The two kinds of structural type in the Terraform language are:
-
-* `object(...)`: has named attributes that each have their own type.
-* `tuple(...)`: has a sequence of elements identified by consecutive whole
-  numbers starting with zero, where each element has its own type.
-
-An object type value can be created using an object expression:
-
-```hcl
-{
-  name = "John"
-  age  = 52
-}
-```
-
-The type of the object value created by this expression is
-`object({name=string,age=number})`. In most cases it is not important to know
-the exact type of an object value, since the Terraform language automatically
-checks and converts object types when needed.
-
-Similarly, a tuple type value can be created using a tuple expression:
-
-```hcl
-["a", 15, true]
-```
-
-The type of the tuple value created by this expression is
-`tuple([string, number, bool])`. Tuple values are rarely used directly in
-the Terraform language, and are instead usually converted immediately to
-list values by converting all of the elements to the same type.
-
-Terraform will automatically convert object values to map values when required,
-so usually object and map values can be used interchangably as long as their
-contained values are of suitable types.
-
-Likewise, Terraform will automatically convert tuple values to list values
-when required, and so tuple and list values can be used interchangably in
-most cases too.
-
-Because of these automatic conversions, it is common to not make a strong
-distinction between object and map or tuple and list in everyday discussion
-of the Terraform language. The Terraform documentation usually discusses the
-object and tuple types only in rare cases where it is important to distinguish
-them from the map and list types.
+Object attributes with names that are valid identifiers can also be accessed
+using the dot-separated attribute notation, like `local.object.attrname`. This
+syntax is also allowed for accessing map elements with keys that are valid
+identifiers, but we recommend using the square-bracket index notation
+(`local.map["keyname"]`) when a map contains arbitrary user-specified keys, as
+opposed to an object with a fixed set of attributes defined by a schema.
 
 ## References to Named Objects
 
@@ -249,20 +252,6 @@ effect:
   until the apply phase, causing the apply to fail.
 
 Unknown values appear in the `terraform plan` output as `(not yet known)`.
-
-## Indices and Attributes
-
-Elements of list-, tuple-, map-, and object-typed values can be accessed using
-the square-bracket index notation, like `local.list[3]`. The expression within
-the brackets must be a whole number for list and tuple values or a string
-for map and object values.
-
-Object attributes with names that are valid identifiers can also be accessed
-using the dot-separated attribute notation, like `local.object.attrname`. This
-syntax is also allowed for accessing map elements with keys that are valid
-identifiers, but we recommend using the square-bracket index notation
-(`local.map["keyname"]`) when a map contains arbitrary user-specified keys, as
-opposed to an object with a fixed set of attributes defined by a schema.
 
 ## Arithmetic and Logical Operators
 

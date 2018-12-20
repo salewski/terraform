@@ -117,8 +117,9 @@ collections:
 * `tuple([<TYPE>, ...])`
 
 The keyword `any` may be used to indicate that any type is acceptable. For
-more information on the meaning and behavior of these different types,
-see [the _Expressions_ section](/docs/configuration/expressions.html).
+more information on the meaning and behavior of these different types, as well
+as detailed information about automatic conversion of complex types, see
+[Type Constraints](/docs/configuration/types.html).
 
 If both the `type` and `default` arguments are specified, the given default
 value must be convertible to the specified type.
