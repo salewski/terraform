@@ -16,11 +16,11 @@ describing an intended goal rather than the steps to reach that goal.
 
 ## Resources and Modules
 
-The main purpose of the Terraform language is declaring [resources](/docs/configuration/resources.html).
+The main purpose of the Terraform language is declaring [resources](./resources.html).
 All other language features exist only to make the definition of resources
 more flexible and convenient.
 
-A group of resources can be gathered into a [module](/docs/configuration/modules.html),
+A group of resources can be gathered into a [module](./modules.html),
 which creates a larger unit of configuration. A resource describes a single
 infrastructure object, while a module might describe a set of objects and the
 necessary relationships between them in order to create a higher-level system.
@@ -61,7 +61,7 @@ For full details about Terraform's syntax, see:
 ## Code Organization
 
 The Terraform language uses configuration files that are named with the `.tf`
-file extension. There is also [a JSON-based variant of the language](/docs/configuration/syntax-json.html)
+file extension. There is also [a JSON-based variant of the language](./syntax-json.html)
 that is named with the `.tf.json` file extension.
 
 Configuration files must always use UTF-8 encoding, and by convention are
@@ -98,7 +98,7 @@ make remote infrastructure match the given configuration.
 
 This general engine has no knowledge about specific types of infrastructure
 objects. Instead, Terraform uses plugins called
-[providers](/docs/configuration/providers.html) that each define and manage a
+[providers](./providers.html) that each define and manage a
 set of resource types. Most providers are associated with a particular cloud or
 on-premises infrastructure service, allowing Terraform to manage infrastructure
 objects within that service.

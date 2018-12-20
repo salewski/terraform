@@ -13,8 +13,8 @@ in Terraform configuration. Use of data sources allows a Terraform
 configuration to make use of information defined outside of Terraform,
 or defined by another separate Terraform configuration.
 
-Each [provider](/docs/configuration/providers.html) make offer data sources
-alongside its set of [resource types](/docs/configuration/resources.html#resource-types-and-arguments).
+Each [provider](./providers.html) make offer data sources
+alongside its set of [resource types](./resources.html#resource-types-and-arguments).
 
 ## Using Data Sources
 
@@ -60,14 +60,14 @@ Each data resource is associated with a single data source, which determines
 the kind of object (or objects) it reads and what query constraint arguments
 are available.
 
-Each data source in turn belongs to a [provider](/docs/configuration/providers.html),
+Each data source in turn belongs to a [provider](./providers.html),
 which is a plugin for Terraform that offers a collection of resource types and
 data sources that most often belong to a single cloud or on-premises
 infrastructure platform.
 
 Most of the items within the body of a `data` block are defined by and
 specific to the selected data source, and these arguments can make full
-use of [expressions](/docs/configuration/expressions.html) and other dynamic
+use of [expressions](./expressions.html) and other dynamic
 Terraform language features.
 
 However, there are some "meta-arguments" that are defined by Terraform itself
@@ -109,7 +109,7 @@ operation, and is re-calulated each time a new plan is created.
 ## Data Resource Dependencies
 
 Data resources have the same dependency resolution behavior
-[as defined for managed resources](/docs/configuration/resources.html#resource-dependencies).
+[as defined for managed resources](./resources.html#resource-dependencies).
 
 In particular, the `depends_on` meta-argument is also available within `data`
 blocks, with the same meaning and syntax as in `resource` blocks.
@@ -125,7 +125,7 @@ resources.
 
 ## Multiple Resource Instances
 
-Data resources support [the `count` meta-argument](/docs/configuration/resources.html#multiple-resource-instances)
+Data resources support [the `count` meta-argument](./resources.html#multiple-resource-instances)
 as defined for managed resources, with the same syntax and behavior.
 
 As with managed resources, when `count` is present it is important to
@@ -135,7 +135,7 @@ own variant of the constraint arguments, producing an indexed result.
 
 ## Selecting a Non-default Provider Configuration
 
-Data resources support [the `providers` meta-argument](/docs/configuration/resources.html#selecting-a-non-default-provider-configuration)
+Data resources support [the `providers` meta-argument](./resources.html#selecting-a-non-default-provider-configuration)
 as defined for managed resources, with the same syntax and behavior.
 
 ## Lifecycle Customizations

@@ -157,7 +157,7 @@ values.
 The following named values are available:
 
 * `<RESOURCE TYPE>.<NAME>` is an object representing a
-  [managed resource](/docs/configuration/resources.html) of the given type
+  [managed resource](./resources.html) of the given type
   and name. The attributes of the resource can be accessed using
   [dot or square bracket notation][inpage-index].
 
@@ -167,14 +167,14 @@ The following named values are available:
     If the resource has the `count` argument set, the value of this expression
     is a _list_ of objects representing its instances.
 * `var.<NAME>` is the value of the
-  [input variable](/docs/configuration/variables.html) of the given name.
+  [input variable](./variables.html) of the given name.
 * `local.<NAME>` is the value of the
-  [local value](/docs/configuration/locals.html) of the given name.
+  [local value](./locals.html) of the given name.
 * `module.<MODULE NAME>.<OUTPUT NAME>` is the value of the specified
-  [output value](/docs/configuration/outputs.html) from a
-  [child module](/docs/configuration/modules.html) called by the current module.
+  [output value](./outputs.html) from a
+  [child module](./modules.html) called by the current module.
 * `data.<DATA TYPE>.<NAME>` is an object representing a
-  [data resource](/docs/configuration/data-sources.html) of the given data
+  [data resource](./data-sources.html) of the given data
   source type and name. If the resource has the `count` argument set, the value
   is a list of objects representing its instances.
 * `path.module` is the filesystem path of the module where the expression
@@ -212,7 +212,7 @@ documentation for the specific contexts where they appear.
 
 -> **Note:** Local named values are often referred to as _variables_ or
 _temporary variables_ in their documentation. These are not [input
-variables](/docs/configuration/variables.html); they are just arbitrary names
+variables](./variables.html); they are just arbitrary names
 that temporarily represent a value.
 
 ### Values Not Yet Known
@@ -366,7 +366,7 @@ conditional expression will return without knowing the condition value.
 ## Function Calls
 
 The Terraform language has a number of
-[built-in functions](/docs/configuration/functions.html) that can be used
+[built-in functions](./functions.html) that can be used
 within expressions as another way to transform and combine values. These
 are similar to the operators but all follow a common syntax:
 
@@ -402,7 +402,7 @@ The expansion symbol is three periods (`...`), not a Unicode ellipsis character
 ### Available Functions
 
 For a full list of available functions, see
-[the function reference](/docs/configuration/functions.html).
+[the function reference](./functions.html).
 
 ## `for` Expressions
 

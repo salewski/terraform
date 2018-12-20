@@ -48,14 +48,14 @@ Each resource is associated with a single _resource type_, which determines
 the kind of infrastructure object it manages and what arguments and other
 attributes the resource supports.
 
-Each resource type in turn belongs to a [provider](/docs/configuration/providers.html),
+Each resource type in turn belongs to a [provider](./providers.html),
 which is a plugin for Terraform that offers a collection of resource types. A
 provider usually provides resources to manage a single cloud or on-premises
 infrastructure platform.
 
 Most of the items within the body of a `resource` block are specific to the
 selected resource type. These arguments can make full use of
-[expressions](/docs/configuration/expressions.html) and other dynamic Terraform
+[expressions](./expressions.html) and other dynamic Terraform
 language features.
 
 There are also some _meta-arguments_ that are defined by Terraform itself
@@ -251,7 +251,7 @@ available for use in expressions so you can modify the configuration of each
 instance. This object has one attribute, `count.index`, which provides the
 distinct index number (starting with `0`) for each instance.
 
-The `count` meta-argument accepts [expressions](/docs/configuration/expressions.html)
+The `count` meta-argument accepts [expressions](./expressions.html)
 in its value, similar to the resource-type-specific arguments for a resource.
 However, Terraform must interpret the `count` argument _before_ any actions
 are taken from remote resources, and so (unlike the resource-type-specifc arguments)
@@ -294,7 +294,7 @@ changed later.
 
 [inpage-provider]: #provider-selecting-a-non-default-provider-configuration
 
-As described in [the Providers page](/docs/configuration/providers.html),
+As described in [the Providers page](./providers.html),
 Terraform optionally allows the definition of multiple alternative ("aliased")
 configurations for a single provider, to allow management of resources
 in different regions in multi-region services, etc.
@@ -475,7 +475,7 @@ saving those results in the state for future use.
 For example, local-only resource types exist for
 [generating private keys](/docs/providers/tls/r/private_key.html),
 [issuing self-signed TLS certificates](/docs/providers/tls/r/self_signed_cert.html),
-and even [generating random ids](https://www.terraform.io/docs/providers/random/r/id.html).
+and even [generating random ids](/docs/providers/random/r/id.html).
 While these resource types often have a more marginal purpose than those
 managing "real" infrastructure objects, they can be useful as glue to help
 connect together other resources.

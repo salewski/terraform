@@ -15,7 +15,7 @@ and allowing modules to be shared between different configurations.
 
 When you declare variables in the root module of your configuration, you can
 set their values using CLI arguments and environment variables.
-When you declare them in [child modules](/docs/configuration/modules.html),
+When you declare them in [child modules](./modules.html),
 the calling module should pass values in the `module` block.
 
 Input variable usage is introduced in the Getting Started guide section
@@ -60,7 +60,7 @@ _except_ the following:
 - `lifecycle`
 
 These names are reserved for meta-arguments in
-[module configuration blocks](/docs/configuration/modules.html), and cannot be
+[module configuration blocks](./modules.html), and cannot be
 declared as variable names.
 
 The variable declaration can optionally include a `type` argument to
@@ -76,7 +76,7 @@ configuration.
 ## Using Input Variable Values
 
 Within the module that declared a variable, its value can be accessed from
-within [expressions](/docs/configuration/expressions.html) as `var.<NAME>`,
+within [expressions](./expressions.html) as `var.<NAME>`,
 where `<NAME>` matches the label given in the declaration block:
 
 ```hcl
@@ -119,7 +119,7 @@ collections:
 The keyword `any` may be used to indicate that any type is acceptable. For
 more information on the meaning and behavior of these different types, as well
 as detailed information about automatic conversion of complex types, see
-[Type Constraints](/docs/configuration/types.html).
+[Type Constraints](./types.html).
 
 If both the `type` and `default` arguments are specified, the given default
 value must be convertible to the specified type.
@@ -157,7 +157,7 @@ can be set in a number of ways:
 The following sections describe these options in more detail. This section does
 not apply to _child_ modules, where values for input variables are instead
 assigned in the configuration of their parent module, as described in
-[_Modules_](/docs/configuration/modules.html).
+[_Modules_](./modules.html).
 
 ### Variables on the Command Line
 

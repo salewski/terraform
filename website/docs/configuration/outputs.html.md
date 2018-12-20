@@ -41,7 +41,7 @@ The label immediately after the `output` keyword is the name that can be used
 to access this output in the parent module, if any, or the name that will be
 displayed to the user for output values in the root module.
 
-The `value` argument takes an [expression](/docs/configuration/expressions.html)
+The `value` argument takes an [expression](./expressions.html)
 whose result is to be returned to the user. In this example, the expression
 refers to the `private_ip` attribute exposed by an `aws_instance` resource
 defined elsewhere in this module (not shown). Any valid expression is allowed
@@ -104,7 +104,7 @@ correctly determine the dependencies between resources defined in different
 modules.
 
 Just as with
-[resource dependencies](/docs/configuration/resources.html#resource-dependencies),
+[resource dependencies](./resources.html#resource-dependencies),
 Terraform analyzes the `value` expression for an output value and autmatically
 determines a set of dependencies, but in less-common cases there are
 dependencies that cannot be recognized implicitly. In these rare cases, the

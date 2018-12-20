@@ -8,7 +8,7 @@ description: |-
 
 # Providers
 
-While [resources](/docs/configuration/resources.html) are the primary construct
+While [resources](./resources.html) are the primary construct
 in the Terraform language, the _behaviors_ of resources rely on their
 associated resource types, and these types are defined by _providers_.
 
@@ -49,7 +49,7 @@ the provider itself; in this example both `project` and `region`
 are specific to the `google` provider.
 
 The configuration arguments defined by the provider may be assigned using
-[expressions](/docs/configuration/expressions.html), which can for example
+[expressions](./expressions.html), which can for example
 allow them to be parameterized by input variables. However, since provider
 configurations must be evaluated in order to perform any resource type action,
 provider configurations may refer only to values that are known before
@@ -304,7 +304,7 @@ use of a local directory as a shared plugin cache, which then allows each
 distinct plugin binary to be downloaded only once.
 
 To enable the plugin cache, use the `plugin_cache_dir` setting in
-[the CLI configuration file](https://www.terraform.io/docs/commands/cli-config.html).
+[the CLI configuration file](/docs/commands/cli-config.html).
 For example:
 
 ```hcl

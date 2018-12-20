@@ -29,7 +29,7 @@ created, and published in [the dedicated _Modules_ section](/docs/modules/index.
 
 To _call_ a module means to include the contents of that module into the
 configuration with specific values for its
-[input variables](/docs/configuration/variables.html). Modules are called
+[input variables](./variables.html). Modules are called
 from within other modules using `module` blocks:
 
 ```hcl
@@ -47,7 +47,7 @@ The label immediately after the `module` keyword is a local name, which the
 calling module can use to refer to this instance of the module.
 
 Within the block body (between `{` and `}`) are the arguments for the module.
-Most of the arguments correspond to [input variables](/docs/configuration/variables.html)
+Most of the arguments correspond to [input variables](./variables.html)
 defined by the module, including the `servers` argument in the above example.
 
 All modules require a `source` argument, which is a meta-argument defined by
@@ -65,7 +65,7 @@ variable values.
 
 The resources defined in a module are encapsulated, so the calling module
 cannot access their attributes directly. However, the child module can
-declare [output values](/docs/configuration/outputs.html) to selectively
+declare [output values](./outputs.html) to selectively
 export certain values to be accessed by the calling module.
 
 For example, if the `./app-cluster` module referenced in the example above

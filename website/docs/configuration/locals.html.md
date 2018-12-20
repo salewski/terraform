@@ -9,7 +9,7 @@ description: |-
 
 # Local Values
 
-A local value assigns a name to an [expression](/docs/configuration/expressions.html),
+A local value assigns a name to an [expression](./expressions.html),
 allowing it to be used multiple times within a module without repeating
 it.
 
